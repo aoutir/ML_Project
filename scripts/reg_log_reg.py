@@ -9,7 +9,10 @@ DATA_TEST_PATH = PROJECT_PATH + '/data/test.csv'
 
 def sigmoid(t):
     """apply the sigmoid function on t."""
+    t[t<-100] = -100
+    # input_limit = 3.720075*(10**-44)
     sigma_t = (1+np.exp(-t))**(-1)
+    # sigma_t[sigma_t<input_limit] = input_limit
     return sigma_t
 
 def calculate_penalized_loss(y, tx, w, lambda_):
@@ -18,13 +21,14 @@ def calculate_penalized_loss(y, tx, w, lambda_):
     N = y.shape[0]
     L = 0
     for i in range(0,N):
-        L = L - 1*(y[i]*np.log(sigma_t[i]) + (1-y[i])*np.log(1-sigma_t[i]))
+        L = L + (-1*(y[i]*np.log(sigma_t[i]) + (1-y[i])*np.log(1-sigma_t[i])))
     L = L + lambda_*np.linalg.norm(w.T@w, ord=2)
     return L
 
 def calculate_penalized_gradient(y, tx, w, lambda_):
     """compute the gradient of loss."""
     sigma_t = sigmoid(tx@w)
+    y = np.reshape(y, (-1, 1))
     G = tx.T@(sigma_t - y) + 2*lambda_*w
     return G
 
