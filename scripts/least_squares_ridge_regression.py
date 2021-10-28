@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-# In[15]:
+# In[75]:
 
 
 # Useful starting lines
@@ -12,9 +12,10 @@ get_ipython().run_line_magic('load_ext', 'autoreload')
 get_ipython().run_line_magic('autoreload', '2')
 
 
-# In[16]:
+# In[76]:
 
 
+import matplotlib.pyplot as plt
 import os
 from proj1_helpers import *
 from plots import *
@@ -23,7 +24,18 @@ DATA_TRAIN_PATH = PROJECT_PATH + '/data/train.csv'
 DATA_TEST_PATH = PROJECT_PATH + '/data/test.csv'
 
 
-# In[17]:
+# In[77]:
+
+
+def standardize(x):
+   
+    centered_data = x - np.mean(x, axis=0)
+    std_data = centered_data / np.std(centered_data, axis=0)
+    
+    return std_data
+
+
+# In[78]:
 
 
 def build_poly(x, degree):
@@ -34,7 +46,7 @@ def build_poly(x, degree):
     return poly
 
 
-# In[18]:
+# In[79]:
 
 
 def compute_mse(e):
@@ -42,7 +54,7 @@ def compute_mse(e):
     return 1/2*np.mean(e**2)
 
 
-# In[19]:
+# In[80]:
 
 
 def least_squares(y, tx):
@@ -55,47 +67,64 @@ def least_squares(y, tx):
     return mse , opt_weights_w
 
 
-# In[20]:
+# In[81]:
 
 
-def least_squares_demo(degree):
-    """polynomial regression using least squares method with a given degree."""
+def least_squares_demo():
+    """Constructing the polynomial basis function expansion of the data,
+       and then running least squares regression."""
     
     y_train ,x_train , ids_train = load_csv_data(DATA_TRAIN_PATH)
     y_test ,x_test ,ids_test = load_csv_data(DATA_TEST_PATH)
     
-    # form train and test data with polynomial basis function: TODO
-    tx_train_poly = build_poly(x_train, degree)    
-    tx_test_poly = build_poly(x_test, degree)    
-    print(np.shape(x_train))
-    print(np.shape(tx_train_poly))
-    # calculate weight through least square: TODO
-    
-    mse_tr , weight = least_squares(y_train, tx_train_poly)
-    
-    # calculate RMSE for train and test data,
-    # and store them in rmse_tr and rmse_te respectively: TODO
-    print("weight" , np.shape(weight))
-    print("error train" , compute_mse(y_train-tx_train_poly.dot(weight)) )
-    rmse_tr = np.sqrt(2 * compute_mse(y_train-tx_train_poly.dot(weight)))
-    rmse_te = np.sqrt(2 * compute_mse(y_test-tx_test_poly.dot(weight)))  
-    
-    OUTPUT_PATH = 'test0.1' # TODO: fill in desired name of output file for submission
-    y_pred = predict_labels(weight, tx_test_poly)
-    create_csv_submission(ids_test, y_pred, OUTPUT_PATH)
-  
-    print(" degree={d}, Training RMSE={tr:.3f}, Testing RMSE={te:.3f}".format(
-           d=degree, tr=rmse_tr, te=rmse_te))
+    plt.plot(x_train ,y_train , "kx" )
+    x_train = standardize(x_train)
+    x_test = standardize(x_test)
+    # define parameters
+    degrees = [1, 3, 7, 12]
+    # define the structure of the figure
+    num_row = 2
+    num_col = 2
+    f, axs = plt.subplots(num_row, num_col)
+
+    for ind, degree in enumerate(degrees):   
+
+        # form train and test data with polynomial basis function: TODO
+        tx_train_poly = build_poly(x_train, degree)    
+        tx_test_poly = build_poly(x_test, degree)    
+        
+        # calculate weight through least square: TODO
+
+        mse_tr , weight = least_squares(y_train, tx_train_poly)
+
+        # calculate RMSE for train and test data,
+        # and store them in rmse_tr and rmse_te respectively: TODO
+        print("error train" , compute_mse(y_train-tx_train_poly.dot(weight)) )
+        rmse_tr = np.sqrt(2 * compute_mse(y_train-tx_train_poly.dot(weight)))
+        rmse_te = np.sqrt(2 * compute_mse(y_test-tx_test_poly.dot(weight)))  
+
+        OUTPUT_PATH = 'test0.1' # TODO: fill in desired name of output file for submission
+        y_pred = predict_labels(weight, tx_test_poly)
+        create_csv_submission(ids_test, y_pred, OUTPUT_PATH)
+
+        print("Processing {i}th experiment, degree={d}, Training RMSE={tr:.3f}, Testing RMSE={te:.3f}".format(
+               i=ind + 1 , d=degree, tr=rmse_tr, te=rmse_te))
+       
+        # plot fitted curve of test data 
+        
+        #plot_fitted_curve(y_test, tx_test_poly, weight, degree, axs[ind // num_col][ind % num_col])
+    #plt.tight_layout()
+    #plt.savefig("visualize_polynomial_regression")
+    #plt.show()
 
 
-# In[21]:
+# In[ ]:
 
 
-degree = 3
-least_squares_demo( degree)
+least_squares_demo()
 
 
-# In[22]:
+# In[ ]:
 
 
 def ridge_regression(y, tx, lambda_):
@@ -108,7 +137,7 @@ def ridge_regression(y, tx, lambda_):
     return ridge_weights
 
 
-# In[23]:
+# In[ ]:
 
 
 def ridge_regression_demo( degree):
@@ -120,6 +149,8 @@ def ridge_regression_demo( degree):
     y_train ,x_train  , ids_train = load_csv_data(DATA_TRAIN_PATH)
     y_test , x_test ,ids_test = load_csv_data(DATA_TEST_PATH)
     
+    x_train = standardize(x_train)
+    x_test = standardize(x_test)
     # form train and test data with polynomial basis function: TODO
     tx_train_poly = build_poly(x_train, degree)    
     tx_test_poly = build_poly(x_test, degree)        
@@ -129,7 +160,6 @@ def ridge_regression_demo( degree):
         
         # ridge regression with a given lambda
         weight = ridge_regression(y_train, tx_train_poly, lambda_)
-        print(np.shape(weight))
         print(compute_mse(y_train-tx_train_poly.dot(weight)))
         rmse_tr.append(np.sqrt(2 * compute_mse(y_train-tx_train_poly.dot(weight))))
         rmse_te.append(np.sqrt(2 * compute_mse(y_test-tx_test_poly.dot(weight))))
@@ -145,7 +175,7 @@ def ridge_regression_demo( degree):
     plot_train_test(rmse_tr, rmse_te, lambdas, degree)
 
 
-# In[24]:
+# In[ ]:
 
 
 degree = 3
