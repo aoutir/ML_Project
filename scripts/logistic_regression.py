@@ -113,7 +113,7 @@ def split_data(y, tX, ids):
             ids_23.append(ids[i])
     y_0, tX_0, ids_0, y_1, tX_1, ids_1, y_23, tX_23, ids_23 = np.asarray(y_0), np.asarray(tX_0), np.asarray(ids_0), np.asarray(y_1), np.asarray(tX_1), np.asarray(ids_1), np.asarray(y_23), np.asarray(tX_23), np.asarray(ids_23)
     tX_0 = np.delete(tX_0, [4,5,6,12,22,23,24,25,26,27,28,29], 1)
-    tX_1 = np.delete(tX_1, [4,5,6,12, 22,26,27,28], 1)
+    tX_1 = np.delete(tX_1, [4,5,6,12,22,26,27,28], 1)
     return y_0, tX_0, ids_0, y_1, tX_1, ids_1, y_23, tX_23, ids_23
 
 if __name__ == "__main__":
@@ -121,8 +121,12 @@ if __name__ == "__main__":
     # _, tX_test, ids_test = load_csv_data(DATA_TEST_PATH)
     # initial_w =  np.zeros((tX.shape[1], 1))
     max_iter = 10000
-    gamma = 0.01
+    gamma = 0.0001
     y_0, tX_0, ids_0, y_1, tX_1, ids_1, y_23, tX_23, ids_23 = split_data(y, tX, ids)
     w_0, losses_0 = logistic_regression_newton_method_demo(y_0, tX_0, np.zeros((tX_0.shape[1], 1)), max_iter, gamma)
     w_1, losses_1 = logistic_regression_newton_method_demo(y_1, tX_1, np.zeros((tX_1.shape[1], 1)), max_iter, gamma)
     w_23, losses_23 = logistic_regression_newton_method_demo(y_23, tX_23, np.zeros((tX_23.shape[1], 1)), max_iter, gamma)
+
+    print('w_0: ', w_0)
+    print('w_1: ', w_1)
+    print('w_23: ', w_23)
