@@ -77,7 +77,6 @@ def logistic_regression_newton_method_demo(y, x, initial_w, max_iter, gamma):
     # build tx
     tx = np.c_[x]
     w = initial_w
-    tx = standardize(tx)
 # 30
     # w =  [[ 1.04538050e-04], [-6.54171426e-03], [-5.85284348e-03], [-2.98997870e-04], [-3.53059268e-02], [ 4.19694173e-04], [-2.53438312e-02], [ 2.97947313e-01], [ 1.81651633e-04], [-2.17972191e+00], [-2.35488901e-01], [ 8.05650981e-02], [ 7.73573471e-02], [ 2.18648324e+00], [-3.69594433e-04], [-7.34404175e-04], [ 2.19221093e+00], [-7.37638260e-04], [ 1.01818252e-03], [ 3.06951075e-03], [ 3.87778139e-04], [-5.66688019e-04], [-4.29103632e-01], [-2.58669723e-03], [ 1.39939245e-03], [ 1.72453043e-03], [-3.27394412e-03], [-4.18565691e-03], [-9.05138346e-03], [ 2.18144973e+00]]
 
@@ -96,6 +95,15 @@ def logistic_regression_newton_method_demo(y, x, initial_w, max_iter, gamma):
     # visualization(y, x, mean_x, std_x, w, "classification_by_logistic_regression_newton_method",True)
     print("loss={l}".format(l=calculate_loss(y, tx, w)))
     return w, losses
+
+def build_poly(x, degree):
+    """polynomial basis functions for input data x, for j=0 up to j=degree."""
+    temp = np.ones((len(x),1))
+    for i in range(1,degree+1):
+        new = np.power(x,i)
+        temp = np.c_[temp,new]
+    return temp
+
 
 def split_data(y, tX, ids):
     tX_0 = []
@@ -121,8 +129,22 @@ def split_data(y, tX, ids):
             y_23.append(y[i])
             ids_23.append(ids[i])
     y_0, tX_0, ids_0, y_1, tX_1, ids_1, y_23, tX_23, ids_23 = np.asarray(y_0), np.asarray(tX_0), np.asarray(ids_0), np.asarray(y_1), np.asarray(tX_1), np.asarray(ids_1), np.asarray(y_23), np.asarray(tX_23), np.asarray(ids_23)
-    tX_0 = np.delete(tX_0, [4,5,6,12,22,23,24,25,26,27,28,29], 1)
-    tX_1 = np.delete(tX_1, [4,5,6,12,22,26,27,28], 1)
+    # tX_0 = np.delete(tX_0, [4,5,6,12,22,23,24,25,26,27,28,29], 1)
+    # tX_1 = np.delete(tX_1, [4,5,6,12,22,26,27,28], 1)
+    feature_mean_23 = np.mean(tX_23, axis = 0)
+    # feature_mean_123 = (np.mean(tX_23, axis = 0)*len(tX_23) + np.mean(tX_1, axis = 0)*len(tX_1))/(len(tX_23)+len(tX_1))
+    for i in range(0,len(tX_0)):
+        temp = tX_0[i,:]
+        temp[temp == -999] = feature_mean_23[temp == -999]
+        tX_0[i,:] = temp
+    for i in range(0,len(tX_1)):
+        temp = tX_1[i,:]
+        temp[temp == -999] = feature_mean_23[temp == -999]
+        tX_1[i,:] = temp
+    # tX_0 = standardize(tX_0)
+    # tX_1 = standardize(tX_1)
+    # tX_23 = standardize(tX_23)
+
     return y_0, tX_0, ids_0, y_1, tX_1, ids_1, y_23, tX_23, ids_23
 
 if __name__ == "__main__":
@@ -130,19 +152,27 @@ if __name__ == "__main__":
     _, tX_test, ids_test = load_csv_data(DATA_TEST_PATH)
     # initial_w =  np.zeros((tX.shape[1], 1))
     max_iter = 10000
-    gamma = 0.0001
+    gamma = 0.1
+    degree = 3
     y_0, tX_0, ids_0, y_1, tX_1, ids_1, y_23, tX_23, ids_23 = split_data(y, tX, ids)
-    w_0, losses_0 = logistic_regression_newton_method_demo(y_0, tX_0, np.zeros((tX_0.shape[1], 1)), max_iter, gamma)
-    w_1, losses_1 = logistic_regression_newton_method_demo(y_1, tX_1, np.zeros((tX_1.shape[1], 1)), max_iter, gamma)
-    w_23, losses_23 = logistic_regression_newton_method_demo(y_23, tX_23, np.zeros((tX_23.shape[1], 1)), max_iter, gamma)
+    # tx_0_p = build_poly(tX_0, degree)
+    # tx_1_p = build_poly(tX_1, degree)
+    # tx_23_p = build_poly(tX_23, degree)
+    print(tX_0[0,24],tX_0[0,25],tX_0[0,26],tX_0[0,27],tX_0[0,28],tX_0[0,29])
+    tx_0_p = tX_0
+    tx_1_p = tX_1
+    tx_23_p = tX_23
+    w_0, losses_0 = logistic_regression_newton_method_demo(y_0, tx_0_p, np.zeros((tx_0_p.shape[1], 1)), max_iter, gamma)
+    w_1, losses_1 = logistic_regression_newton_method_demo(y_1, tx_1_p, np.zeros((tx_1_p.shape[1], 1)), max_iter, gamma)
+    w_23, losses_23 = logistic_regression_newton_method_demo(y_23, tx_23_p, np.zeros((tx_23_p.shape[1], 1)), max_iter, gamma)
 
     y_pred = np.zeros((len(tX_test),1))
     for i in range(0,len(tX_test)):
         if tX_test[i,22] == 0:
-            tmp = np.delete(tX_test[i,:], [0,4,5,6,12,22,23,24,25,26,27,28,29])
+            # tmp = np.delete(tX_test[i,:], [0,4,5,6,12,22,23,24,25,26,27,28,29])
             y_pred[i] = np.dot(tmp, w_0)
         if tX_test[i,22] == 1:
-            tmp = np.delete(tX_test[i,:], [4,5,6,12,22,26,27,28])
+            # tmp = np.delete(tX_test[i,:], [4,5,6,12,22,26,27,28])
             y_pred[i] = np.dot(tmp, w_1)
         else:
             y_pred[i] = np.dot(tX_test[i], w_23)
