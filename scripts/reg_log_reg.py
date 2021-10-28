@@ -75,7 +75,7 @@ def reg_logisitic_regression(y, x, lambda_, initial_w, max_iter, gamma):
         if len(losses) > 1 and np.abs(losses[-1] - losses[-2]) < threshold:
             break
     # visualization
-    visualization(y, x, mean_x, std_x, w, "classification_by_logistic_regression_penalized_gradient_descent",True)
+    # visualization(y, x, mean_x, std_x, w, "classification_by_logistic_regression_penalized_gradient_descent",True)
     print("loss={l}".format(l=calculate_loss(y, tx, w)))
 
 if __name__ == "__main__":
