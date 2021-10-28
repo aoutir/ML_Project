@@ -60,15 +60,24 @@ def learning_by_newton_method(y, tx, w, gamma):
 
     return L, w
 
+def standardize(x):
+    ''' fill your code in here...
+    '''
+    centered_data = x - np.mean(x, axis=0)
+    std_data = centered_data / np.std(centered_data, axis=0)
+
+    return std_data
+
 def logistic_regression_newton_method_demo(y, x, initial_w, max_iter, gamma):
     # init parameters
+
     threshold = 7
     losses = []
 
     # build tx
     tx = np.c_[x]
     w = initial_w
-
+    tx = standardize(tx)
 # 30
     # w =  [[ 1.04538050e-04], [-6.54171426e-03], [-5.85284348e-03], [-2.98997870e-04], [-3.53059268e-02], [ 4.19694173e-04], [-2.53438312e-02], [ 2.97947313e-01], [ 1.81651633e-04], [-2.17972191e+00], [-2.35488901e-01], [ 8.05650981e-02], [ 7.73573471e-02], [ 2.18648324e+00], [-3.69594433e-04], [-7.34404175e-04], [ 2.19221093e+00], [-7.37638260e-04], [ 1.01818252e-03], [ 3.06951075e-03], [ 3.87778139e-04], [-5.66688019e-04], [-4.29103632e-01], [-2.58669723e-03], [ 1.39939245e-03], [ 1.72453043e-03], [-3.27394412e-03], [-4.18565691e-03], [-9.05138346e-03], [ 2.18144973e+00]]
 
