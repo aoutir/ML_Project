@@ -4,8 +4,9 @@ from proj1_helpers import *
 import os
 from sklearn import preprocessing
 
-DATA_TEST_PATH = os.path.abspath("data/test.csv")
-DATA_TRAIN_PATH = os.path.abspath("data/train.csv")
+PROJECT_PATH = os.path.dirname(os.getcwd())
+DATA_TRAIN_PATH = PROJECT_PATH + '/data/train.csv'
+DATA_TEST_PATH = PROJECT_PATH + '/data/test.csv'
 
 def calculate_mse(e):
     """Calculate the mse for vector e."""
@@ -43,25 +44,25 @@ def gradient_descent(y, tx, initial_w, max_iters, gamma):
         losses.append(loss)
         #print("Gradient Descent : loss={l} ".format( l=loss ))
 
-        if(n_iter == 999): 
+        if(n_iter == 999):
             print("Gradient Descent : loss={l} ".format( l=loss ))
             we ="["
-            for i in w: 
+            for i in w:
                 we += str(i)
                 we += ","
-                
+
             we += "]"
             print(we)
-               
-        
-    return losses, ws
+
+
+    return losses, w
 
 
 def standardize(x):
-    
+
     centered_data = x - np.mean(x, axis=0)
     std_data = centered_data / np.std(centered_data, axis=0)
-    
+
     return std_data
 def split_data(y, tX, ids):
     tX_0 = []
@@ -102,9 +103,21 @@ if __name__ == "__main__":
     gamma = 0.0001
     y_0, tX_0, ids_0, y_1, tX_1, ids_1, y_23, tX_23, ids_23 = split_data(y, tX, ids)
 
-    losses0, w0= gradient_descent(y_0, tX_0, np.zeros((tX_0.shape[1], 1)), max_iters, gamma)
-    losses_1, w1 = gradient_descent(y_1, tX_1, np.zeros((tX_1.shape[1], 1)), max_iters, gamma)
-    losses_23, w23 = gradient_descent(y_23, tX_23, np.zeros((tX_23.shape[1], 1)), max_iters, gamma)
+    losses0, w_0= gradient_descent(y_0, tX_0, np.zeros((tX_0.shape[1], 1)), max_iters, gamma)
+    losses_1, w_1 = gradient_descent(y_1, tX_1, np.zeros((tX_1.shape[1], 1)), max_iters, gamma)
+    losses_23, w_23 = gradient_descent(y_23, tX_23, np.zeros((tX_23.shape[1], 1)), max_iters, gamma)
 
 
-  
+    y_pred = np.zeros((len(tX_test),1))
+    for i in range(0,len(tX_test)):
+        if tX_test[i,22] == 0:
+            tmp = np.delete(tX_test[i,:], [0,4,5,6,12,22,23,24,25,26,27,28,29])
+            y_pred[i] = np.dot(tmp, w_0)
+        if tX_test[i,22] == 1:
+            tmp = np.delete(tX_test[i,:], [4,5,6,12,22,26,27,28])
+            y_pred[i] = np.dot(tmp, w_1)
+        else:
+            y_pred[i] = np.dot(tX_test[i], w_23)
+    y_pred[np.where(y_pred <= 0)] = -1
+    y_pred[np.where(y_pred > 0)] = 1
+    create_csv_submission(ids_test, y_pred, 'resultsSGD.csv')

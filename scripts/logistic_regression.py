@@ -127,7 +127,7 @@ def split_data(y, tX, ids):
 
 if __name__ == "__main__":
     y, tX, ids = load_csv_data(DATA_TRAIN_PATH)
-    # _, tX_test, ids_test = load_csv_data(DATA_TEST_PATH)
+    _, tX_test, ids_test = load_csv_data(DATA_TEST_PATH)
     # initial_w =  np.zeros((tX.shape[1], 1))
     max_iter = 10000
     gamma = 0.0001
@@ -136,6 +136,16 @@ if __name__ == "__main__":
     w_1, losses_1 = logistic_regression_newton_method_demo(y_1, tX_1, np.zeros((tX_1.shape[1], 1)), max_iter, gamma)
     w_23, losses_23 = logistic_regression_newton_method_demo(y_23, tX_23, np.zeros((tX_23.shape[1], 1)), max_iter, gamma)
 
-    print('w_0: ', w_0)
-    print('w_1: ', w_1)
-    print('w_23: ', w_23)
+    y_pred = np.zeros((len(tX_test),1))
+    for i in range(0,len(tX_test)):
+        if tX_test[i,22] == 0:
+            tmp = np.delete(tX_test[i,:], [0,4,5,6,12,22,23,24,25,26,27,28,29])
+            y_pred[i] = np.dot(tmp, w_0)
+        if tX_test[i,22] == 1:
+            tmp = np.delete(tX_test[i,:], [4,5,6,12,22,26,27,28])
+            y_pred[i] = np.dot(tmp, w_1)
+        else:
+            y_pred[i] = np.dot(tX_test[i], w_23)
+    y_pred[np.where(y_pred <= 0)] = -1
+    y_pred[np.where(y_pred > 0)] = 1
+    create_csv_submission(ids_test, y_pred, 'resultstest.csv')
