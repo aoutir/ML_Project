@@ -105,7 +105,13 @@ def build_poly(x, degree):
     return temp
 
 
-def split_data(y, tX, ids):
+def preprocessing(y, tX, ids):
+    """ Splitting the Data based on the Jet Experiment number
+    Grouping into Exp 0, Exp 1 and Exp 2&3
+    input: data (label, features, ids)
+    output: data (label, features, ids) of each experiment in a numpy array
+    """
+    # initilizing the matrices
     tX_0 = []
     tX_1 = []
     tX_23 = []
@@ -115,6 +121,7 @@ def split_data(y, tX, ids):
     ids_0 = []
     ids_1 = []
     ids_23 = []
+    # splitting the data based on the experiment
     for i in range (0, len(tX)):
         if tX[i,22] == 0:
             tX_0.append(tX[i,:])
@@ -128,15 +135,17 @@ def split_data(y, tX, ids):
             tX_23.append(tX[i,:])
             y_23.append(y[i])
             ids_23.append(ids[i])
+    # converting the data to numpy arrays
     y_0, tX_0, ids_0, y_1, tX_1, ids_1, y_23, tX_23, ids_23 = np.asarray(y_0), np.asarray(tX_0), np.asarray(ids_0), np.asarray(y_1), np.asarray(tX_1), np.asarray(ids_1), np.asarray(y_23), np.asarray(tX_23), np.asarray(ids_23)
+    # removing unnecessary features
     tX_0 = np.delete(tX_0, [4,5,6,8,12,22,23,24,25,26,27,28,29], 1)
     tX_1 = np.delete(tX_1, [4,5,6,12,22,26,27,28,29], 1)
     tX_23 = np.delete(tX_23, [22], 1)
-    # print(np.median(tX_0, axis = 0))
+    # getting the median of every feature for each experiment
     feature_median_0 = np.median(tX_0, axis = 0)
     feature_median_1 = np.median(tX_1, axis = 0)
     feature_median_23 = np.median(tX_23, axis = 0)
-    # feature_mean_123 = (np.mean(tX_23, axis = 0)*len(tX_23) + np.mean(tX_1, axis = 0)*len(tX_1))/(len(tX_23)+len(tX_1))
+    # Replacing missing values (-999) values with the median
     for i in range(0,len(tX_0)):
         temp = tX_0[i,:]
         temp[temp == -999] = feature_median_0[temp == -999]
@@ -145,41 +154,68 @@ def split_data(y, tX, ids):
         temp = tX_1[i,:]
         temp[temp == -999] = feature_median_1[temp == -999] #+ np.random.rand(1)*0.01
         tX_1[i,:] = temp
-    # print(tX_0[3,:])
+    # standardizizing the data by removing the mean and the standard deviation
     tX_0 = standardize(tX_0)
     tX_1 = standardize(tX_1)
     tX_23 = standardize(tX_23)
-
+    # returning the data
     return y_0, tX_0, ids_0, y_1, tX_1, ids_1, y_23, tX_23, ids_23
 
 if __name__ == "__main__":
     y, tX, ids = load_csv_data(DATA_TRAIN_PATH)
     _, tX_test, ids_test = load_csv_data(DATA_TEST_PATH)
-    # initial_w =  np.zeros((tX.shape[1], 1))
+    # setting hyper parameters
     max_iter = 10000
     gamma = 0.1
     degree = 3
-    y_0, tX_0, ids_0, y_1, tX_1, ids_1, y_23, tX_23, ids_23 = split_data(y, tX, ids)
-    tx_0_p = build_poly(tX_0, degree)
-    tx_1_p = build_poly(tX_1, degree)
-    tx_23_p = build_poly(tX_23, degree)
+    y_0, tX_0, ids_0, y_1, tX_1, ids_1, y_23, tX_23, ids_23 = preprocessing(y, tX, ids)
 
-    w_0, losses_0 = logistic_regression_newton_method_demo(y_0, tx_0_p, np.zeros((tx_0_p.shape[1], 1)), max_iter, gamma)
-    w_1, losses_1 = logistic_regression_newton_method_demo(y_1, tx_1_p, np.zeros((tx_1_p.shape[1], 1)), max_iter, gamma)
-    w_23, losses_23 = logistic_regression_newton_method_demo(y_23, tx_23_p, np.zeros((tx_23_p.shape[1], 1)), max_iter, gamma)
-
-    y_pred = np.zeros((len(tX_test),1))
-    tX_test = build_poly(tX_test, degree)
-    for i in range(0,len(tX_test)):
-        if tX_test[i,22] == 0:
-            tmp = np.delete(tX_test[i,:], [4,5,6,8,12,22,23,24,25,26,27,28,29,4+30,5+30,6+30,8+30,12+30,22+30,23+30,24+30,25+30,26+30,27+30,28+30,29+30,4+60,5+60,6+60,8+60,12+60,22+60,23+60,24+60,25+60,26+60,27+60,28+60,29+60])
-            y_pred[i] = np.dot(tmp, w_0)
-        if tX_test[i,22] == 1:
-            tmp = np.delete(tX_test[i,:], [4,5,6,12,22,26,27,28,29,4+30,5+30,6+30,12+30,22+30,26+30,27+30,28+30,29+30,4+60,5+60,6+60,12+60,22+60,26+60,27+60,28+60,29+60])
-            y_pred[i] = np.dot(tmp, w_1)
-        else:
-            tmp = np.delete(tX_test[i,:], [22, 22+30, 22+60])
-            y_pred[i] = np.dot(tmp, w_23)
-    y_pred[np.where(y_pred <= 0)] = -1
-    y_pred[np.where(y_pred > 0)] = 1
-    create_csv_submission(ids_test, y_pred, 'resultsmedian.csv')
+    augm = input("Do you want to do data augmenting? [1] Yes, [2]No ")
+    if augm == 1:
+        tx_0_p = build_poly(tX_0, degree)
+        tx_1_p = build_poly(tX_1, degree)
+        tx_23_p = build_poly(tX_23, degree)
+    else:
+        tx_0_p = tX_0
+        tx_1_p = tX_1
+        tx_23_p = tX_23
+    # picking which algorithm to use to get the weights
+    meth = input("Which Method do you want to use: [1] Logistic Regression, [2] Regulated Logistic Regression ")
+    if meth == 1:
+        w_0, losses_0 = logistic_regression_newton_method_demo(y_0, tx_0_p, np.zeros((tx_0_p.shape[1], 1)), max_iter, gamma)
+        w_1, losses_1 = logistic_regression_newton_method_demo(y_1, tx_1_p, np.zeros((tx_1_p.shape[1], 1)), max_iter, gamma)
+        w_23, losses_23 = logistic_regression_newton_method_demo(y_23, tx_23_p, np.zeros((tx_23_p.shape[1], 1)), max_iter, gamma)
+    # deciding whether to use polynomial expension of the data
+    if augm == 1:
+        y_pred = np.zeros((len(tX_test),1))
+        tX_test = build_poly(tX_test, degree)
+        # Get the results for the testg data with the different weights based on the experiment number
+        for i in range(0,len(tX_test)):
+            if tX_test[i,22] == 0:
+                tmp = np.delete(tX_test[i,:], [4,5,6,8,12,22,23,24,25,26,27,28,29,4+30,5+30,6+30,8+30,12+30,22+30,23+30,24+30,25+30,26+30,27+30,28+30,29+30,4+60,5+60,6+60,8+60,12+60,22+60,23+60,24+60,25+60,26+60,27+60,28+60,29+60])
+                y_pred[i] = np.dot(tmp, w_0)
+            if tX_test[i,22] == 1:
+                tmp = np.delete(tX_test[i,:], [4,5,6,12,22,26,27,28,29,4+30,5+30,6+30,12+30,22+30,26+30,27+30,28+30,29+30,4+60,5+60,6+60,12+60,22+60,26+60,27+60,28+60,29+60])
+                y_pred[i] = np.dot(tmp, w_1)
+            else:
+                tmp = np.delete(tX_test[i,:], [22, 22+30, 22+60])
+                y_pred[i] = np.dot(tmp, w_23)
+        y_pred[np.where(y_pred <= 0)] = -1
+        y_pred[np.where(y_pred > 0)] = 1
+        create_csv_submission(ids_test, y_pred, 'resultsmedian.csv')
+    else:
+        y_pred = np.zeros((len(tX_test),1))
+        # Get the results for the testg data with the different weights based on the experiment number
+        for i in range(0,len(tX_test)):
+            if tX_test[i,22] == 0:
+                tmp = np.delete(tX_test[i,:], [4,5,6,8,12,22,23,24,25,26,27,28,29])
+                y_pred[i] = np.dot(tmp, w_0)
+            if tX_test[i,22] == 1:
+                tmp = np.delete(tX_test[i,:], [4,5,6,12,22,26,27,28,29])
+                y_pred[i] = np.dot(tmp, w_1)
+            else:
+                tmp = np.delete(tX_test[i,:], [22])
+                y_pred[i] = np.dot(tmp, w_23)
+        y_pred[np.where(y_pred <= 0)] = -1
+        y_pred[np.where(y_pred > 0)] = 1
+        create_csv_submission(ids_test, y_pred, 'resultsmedian.csv')
