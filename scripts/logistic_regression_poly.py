@@ -191,15 +191,31 @@ if __name__ == "__main__":
         y_pred = np.zeros((len(tX_test),1))
         tX_test = build_poly(tX_test, degree)
         # Get the results for the testg data with the different weights based on the experiment number
+        delete_0 = np.array([4,5,6,8,12,22,23,24,25,26,27,28,29])
+        delete_1 = np.array([4,5,6,12,22,26,27,28,29])
+        delete_23 = np.array([22])
+        delete_0_i = delete_0
+        delete_1_i = delete_1
+        delete_2_i = delete_2
+        if degree >1:
+            # Remove columns of the augmented data
+            for i in range(0,degree):
+                delete_0 = [delete_0,delete_0_i+30*degree]
+                delete_1 = [delete_1,delete_1_i+30*degree]
+                delete_23 = [delete_23,delete_2_i+30*degree]
+            delete_0 = np.reshape(delete_0, (1, -1))
+            delete_1 = np.reshape(delete_1, (1, -1))
+            delete_23 = np.reshape(delete_23, (1, -1))
+
         for i in range(0,len(tX_test)):
             if tX_test[i,22] == 0:
-                tmp = np.delete(tX_test[i,:], [4,5,6,8,12,22,23,24,25,26,27,28,29,4+30,5+30,6+30,8+30,12+30,22+30,23+30,24+30,25+30,26+30,27+30,28+30,29+30,4+60,5+60,6+60,8+60,12+60,22+60,23+60,24+60,25+60,26+60,27+60,28+60,29+60])
+                tmp = np.delete(tX_test[i,:], delete_0)
                 y_pred[i] = np.dot(tmp, w_0)
             if tX_test[i,22] == 1:
-                tmp = np.delete(tX_test[i,:], [4,5,6,12,22,26,27,28,29,4+30,5+30,6+30,12+30,22+30,26+30,27+30,28+30,29+30,4+60,5+60,6+60,12+60,22+60,26+60,27+60,28+60,29+60])
+                tmp = np.delete(tX_test[i,:], delete_1)
                 y_pred[i] = np.dot(tmp, w_1)
             else:
-                tmp = np.delete(tX_test[i,:], [22, 22+30, 22+60])
+                tmp = np.delete(tX_test[i,:], delete_23)
                 y_pred[i] = np.dot(tmp, w_23)
         y_pred[np.where(y_pred <= 0)] = -1
         y_pred[np.where(y_pred > 0)] = 1
