@@ -77,8 +77,6 @@ def logistic_regression_newton_method_demo(y, x, initial_w, max_iter, gamma):
     # build tx
     tx = np.c_[x]
     w = initial_w
-# 30
-    # w =  [[ 1.04538050e-04], [-6.54171426e-03], [-5.85284348e-03], [-2.98997870e-04], [-3.53059268e-02], [ 4.19694173e-04], [-2.53438312e-02], [ 2.97947313e-01], [ 1.81651633e-04], [-2.17972191e+00], [-2.35488901e-01], [ 8.05650981e-02], [ 7.73573471e-02], [ 2.18648324e+00], [-3.69594433e-04], [-7.34404175e-04], [ 2.19221093e+00], [-7.37638260e-04], [ 1.01818252e-03], [ 3.06951075e-03], [ 3.87778139e-04], [-5.66688019e-04], [-4.29103632e-01], [-2.58669723e-03], [ 1.39939245e-03], [ 1.72453043e-03], [-3.27394412e-03], [-4.18565691e-03], [-9.05138346e-03], [ 2.18144973e+00]]
 
     # start the logistic regression
     for iter in range(max_iter):
@@ -170,18 +168,28 @@ if __name__ == "__main__":
     degree = 3
     y_0, tX_0, ids_0, y_1, tX_1, ids_1, y_23, tX_23, ids_23 = preprocessing(y, tX, ids)
 
-    augm = input("Do you want to do data augmenting? [1] Yes, [2]No ")
+    augm = input("Do you want to do data augmenting? [1] Yes, [2] No ")
+    augm = int(augm)
     if augm == 1:
         tx_0_p = build_poly(tX_0, degree)
         tx_1_p = build_poly(tX_1, degree)
         tx_23_p = build_poly(tX_23, degree)
+        print('Data augmentation done')
     else:
         tx_0_p = tX_0
         tx_1_p = tX_1
         tx_23_p = tX_23
+        print('Data augmentation skipped')
     # picking which algorithm to use to get the weights
-    meth = input("Which Method do you want to use: [1] Logistic Regression, [2] Regulated Logistic Regression ")
-    if meth == 1:
+    methd = input("Which Method do you want to use: [1] Logistic Regression, [2] Regulated Logistic Regression ")
+    methd = int(methd)
+    if methd == 1:
+        print('Running Logistic Regression')
+        w_0, losses_0 = logistic_regression_newton_method_demo(y_0, tx_0_p, np.zeros((tx_0_p.shape[1], 1)), max_iter, gamma)
+        w_1, losses_1 = logistic_regression_newton_method_demo(y_1, tx_1_p, np.zeros((tx_1_p.shape[1], 1)), max_iter, gamma)
+        w_23, losses_23 = logistic_regression_newton_method_demo(y_23, tx_23_p, np.zeros((tx_23_p.shape[1], 1)), max_iter, gamma)
+    else:
+        print('Running else ')
         w_0, losses_0 = logistic_regression_newton_method_demo(y_0, tx_0_p, np.zeros((tx_0_p.shape[1], 1)), max_iter, gamma)
         w_1, losses_1 = logistic_regression_newton_method_demo(y_1, tx_1_p, np.zeros((tx_1_p.shape[1], 1)), max_iter, gamma)
         w_23, losses_23 = logistic_regression_newton_method_demo(y_23, tx_23_p, np.zeros((tx_23_p.shape[1], 1)), max_iter, gamma)
