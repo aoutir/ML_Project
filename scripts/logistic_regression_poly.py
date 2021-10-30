@@ -11,6 +11,7 @@ def sigmoid(t):
     sigma_t = (1+np.exp(-t))**(-1)
     return sigma_t
 
+
 def calculate_loss_log_reg(y, tx, w):
     """compute the loss: negative log likelihood."""
     sigma_t = sigmoid(tx@w)
@@ -146,9 +147,9 @@ def preprocessing(y, tX, ids):
         temp[temp == -999] = feature_median_1[temp == -999] #+ np.random.rand(1)*0.01
         tX_1[i,:] = temp
     # standardizizing the data by removing the mean and the standard deviation
-    tX_0 = standardize(tX_0)
-    tX_1 = standardize(tX_1)
-    tX_23 = standardize(tX_23)
+    # tX_0 = standardize(tX_0)
+    # tX_1 = standardize(tX_1)
+    # tX_23 = standardize(tX_23)
     # returning the data
     return y_0, tX_0, ids_0, y_1, tX_1, ids_1, y_23, tX_23, ids_23
 
@@ -157,7 +158,7 @@ if __name__ == "__main__":
     _, tX_test, ids_test = load_csv_data(DATA_TEST_PATH)
     # setting hyper parameters
     max_iter = 10000
-    gamma = 0.0001
+    gamma = 0.01
     degree = 3
     y_0, tX_0, ids_0, y_1, tX_1, ids_1, y_23, tX_23, ids_23 = preprocessing(y, tX, ids)
 
@@ -196,26 +197,27 @@ if __name__ == "__main__":
         delete_23 = np.array([22])
         delete_0_i = delete_0
         delete_1_i = delete_1
-        delete_2_i = delete_2
+        delete_2_i = delete_23
         if degree >1:
             # Remove columns of the augmented data
-            for i in range(0,degree):
-                delete_0 = [delete_0,delete_0_i+30*degree]
-                delete_1 = [delete_1,delete_1_i+30*degree]
-                delete_23 = [delete_23,delete_2_i+30*degree]
-            delete_0 = np.reshape(delete_0, (1, -1))
-            delete_1 = np.reshape(delete_1, (1, -1))
-            delete_23 = np.reshape(delete_23, (1, -1))
-
+            for i in range(1,degree):
+                delete_0_i = np.concatenate((delete_0_i, delete_0+(30*i)), axis=None)
+                delete_1_i = np.concatenate((delete_1_i, delete_1+(30*i)), axis=None)
+                delete_2_i = np.concatenate((delete_2_i, delete_23+(30*i)), axis=None)
+            # delete_0 = np.reshape(delete_0, (1, -1))
+            # delete_1 = np.reshape(delete_1, (1, -1))
+            # delete_23 = np.reshape(delete_23, (1, -1))
+            print('delete_23: ', delete_2_i)
+            print('delete_1: ',  delete_1)
         for i in range(0,len(tX_test)):
             if tX_test[i,22] == 0:
-                tmp = np.delete(tX_test[i,:], delete_0)
+                tmp = np.delete(tX_test[i,:], delete_0_i)
                 y_pred[i] = np.dot(tmp, w_0)
             if tX_test[i,22] == 1:
-                tmp = np.delete(tX_test[i,:], delete_1)
+                tmp = np.delete(tX_test[i,:], delete_1_i)
                 y_pred[i] = np.dot(tmp, w_1)
             else:
-                tmp = np.delete(tX_test[i,:], delete_23)
+                tmp = np.delete(tX_test[i,:], delete_2_i)
                 y_pred[i] = np.dot(tmp, w_23)
         y_pred[np.where(y_pred <= 0)] = -1
         y_pred[np.where(y_pred > 0)] = 1
