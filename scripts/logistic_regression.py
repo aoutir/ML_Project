@@ -157,7 +157,7 @@ if __name__ == "__main__":
     _, tX_test, ids_test = load_csv_data(DATA_TEST_PATH)
     # initial_w =  np.zeros((tX.shape[1], 1))
     max_iter = 10000
-    gamma = 0.1
+    gamma = 0.01
     degree = 3
     y_0, tX_0, ids_0, y_1, tX_1, ids_1, y_23, tX_23, ids_23 = split_data(y, tX, ids)
     # tx_0_p = build_poly(tX_0, degree)
@@ -170,12 +170,7 @@ if __name__ == "__main__":
     w_0, losses_0 = logistic_regression_newton_method_demo(y_0, tx_0_p, np.zeros((tx_0_p.shape[1], 1)), max_iter, gamma)
     w_1, losses_1 = logistic_regression_newton_method_demo(y_1, tx_1_p, np.zeros((tx_1_p.shape[1], 1)), max_iter, gamma)
     w_23, losses_23 = logistic_regression_newton_method_demo(y_23, tx_23_p, np.zeros((tx_23_p.shape[1], 1)), max_iter, gamma)
-    # print(w_0.shape)
-    # print(tx_0_p.shape)
     y_pred = np.zeros((len(tX_test),1))
-    # print(tX_test.shape)
-    # print(y_pred.shape)
-    # print(tX_test.shape)
     for i in range(0,len(tX_test)):
         if tX_test[i,22] == 0:
             tmp = np.delete(tX_test[i,:], [4,5,6,8,12,22,23,24,25,26,27,28,29])
@@ -188,4 +183,4 @@ if __name__ == "__main__":
             y_pred[i] = np.dot(tmp, w_23)
     y_pred[np.where(y_pred <= 0)] = -1
     y_pred[np.where(y_pred > 0)] = 1
-    create_csv_submission(ids_test, y_pred, 'resultsmedian.csv')
+    create_csv_submission(ids_test, y_pred, 'sample-submission.csv')
