@@ -11,7 +11,7 @@ def sigmoid(t):
     sigma_t = (1+np.exp(-t))**(-1)
     return sigma_t
 
-def calculate_loss(y, tx, w):
+def calculate_loss_log_reg(y, tx, w):
     """compute the loss: negative log likelihood."""
     sigma_t = sigmoid(tx@w)
     N = y.shape[0]
@@ -20,14 +20,14 @@ def calculate_loss(y, tx, w):
         L = L + (-1*(y[i]*np.log(sigma_t[i]) + (1-y[i])*np.log(1-sigma_t[i])))
     return L
 
-def calculate_gradient(y, tx, w):
+def calculate_gradient_log_reg(y, tx, w):
     """compute the gradient of loss."""
     sigma_t = sigmoid(tx@w)
     y = np.reshape(y, (-1, 1))
     G = tx.T@(sigma_t - y)
     return G
 
-def calculate_hessian(y, tx, w):
+def calculate_hessian_log_reg(y, tx, w):
     """return the Hessian of the loss function."""
 
     # calculate Hessian:
@@ -38,9 +38,9 @@ def calculate_hessian(y, tx, w):
 def logistic_regression(y, tx, w):
     """return the loss, gradient, and Hessian."""
 
-    L = calculate_loss(y, tx, w)
-    G = calculate_gradient(y, tx, w)
-    H = calculate_hessian(y, tx, w)
+    L = calculate_loss_log_reg(y, tx, w)
+    G = calculate_gradient_log_reg(y, tx, w)
+    H = calculate_hessian_log_reg(y, tx, w)
     # return loss, gradient, and Hessian
     return L, G, H
 
@@ -50,12 +50,8 @@ def learning_by_newton_method(y, tx, w, gamma):
     Do one step on Newton's method.
     return the loss and updated w.
     """
-
     # return loss, gradient and Hessian
     L, G, H = logistic_regression(y, tx, w)
-
-    # update w:
-    # print('w: ', w)
     w = w - gamma*np.linalg.solve(H,G)
 
     return L, w
@@ -63,7 +59,7 @@ def learning_by_newton_method(y, tx, w, gamma):
 def standardize(x):
     ''' fill your code in here...
     '''
-    # x = x - np.mean(x, axis=0)
+    x = x - np.mean(x, axis=0)
     x /= np.std(x, axis=0)
 
     return x
@@ -89,9 +85,6 @@ def logistic_regression_newton_method_demo(y, x, initial_w, max_iter, gamma):
         losses.append(loss)
         if len(losses) > 1 and losses[-1] < 0:
             break
-    # visualization
-    # visualization(y, x, mean_x, std_x, w, "classification_by_logistic_regression_newton_method",True)
-    print("loss={l}".format(l=calculate_loss(y, tx, w)))
     return w, losses
 
 def build_poly(x, degree):
@@ -164,7 +157,7 @@ if __name__ == "__main__":
     _, tX_test, ids_test = load_csv_data(DATA_TEST_PATH)
     # setting hyper parameters
     max_iter = 10000
-    gamma = 0.1
+    gamma = 0.0001
     degree = 3
     y_0, tX_0, ids_0, y_1, tX_1, ids_1, y_23, tX_23, ids_23 = preprocessing(y, tX, ids)
 
@@ -210,7 +203,7 @@ if __name__ == "__main__":
                 y_pred[i] = np.dot(tmp, w_23)
         y_pred[np.where(y_pred <= 0)] = -1
         y_pred[np.where(y_pred > 0)] = 1
-        create_csv_submission(ids_test, y_pred, 'resultsmedian.csv')
+        create_csv_submission(ids_test, y_pred, 'RESULTS.csv')
     else:
         y_pred = np.zeros((len(tX_test),1))
         # Get the results for the testg data with the different weights based on the experiment number
