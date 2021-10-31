@@ -31,7 +31,7 @@ def batch_iter(y, tx, batch_size, num_batches=1, shuffle=True):
         if start_index != end_index:
             yield shuffled_y[start_index:end_index], shuffled_tx[start_index:end_index]
 
-def compute_loss(y, tx, w):
+def compute_loss_SGD(y, tx, w):
     """Calculate the loss.
     """
     e = y - tx.dot(w)
@@ -43,7 +43,7 @@ def compute_stoch_gradient(y, tx, w):
     err = y - tx.dot(w)
     grad = -tx.T.dot(err) / len(err)
     return grad, err
-    
+
 def stochastic_gradient_descent(
         y, tx, initial_w, batch_size, max_iters, gamma):
     """Stochastic gradient descent."""
@@ -54,10 +54,10 @@ def stochastic_gradient_descent(
 
     for n_iter in range(max_iters):
         for y_batch, tx_batch in batch_iter(y, tx, batch_size=batch_size, num_batches=1):
-           
+
             grad, _ = compute_stoch_gradient(y_batch, tx_batch, w)
             w = w - gamma * grad
-            loss = compute_loss(y, tx, w)
+            loss = compute_loss_SGD(y, tx, w)
             # store w and loss
             ws.append(w)
             losses.append(loss)
@@ -67,19 +67,8 @@ def stochastic_gradient_descent(
     return losses, ws
 
 def standardize(x):
-    
+
     centered_data = x - np.mean(x, axis=0)
     std_data = centered_data / np.std(centered_data, axis=0)
-    
+
     return std_data
-
-
-if __name__ == "__main__":
-    y, tX, ids = load_csv_data(DATA_TRAIN_PATH)
-    _, tX_test, ids_test = load_csv_data(DATA_TEST_PATH)
-    tX_scaled = standardize(tX)
-    w_initial =  np.zeros((tX_scaled.shape[1], 1))
-    max_iters = 1000
-    gamma = 0.0001
-    batch_size = 3
-    losses, ws= stochastic_gradient_descent(y, tX_scaled, w_initial, batch_size, max_iters, gamma)

@@ -8,8 +8,9 @@ DATA_TEST_PATH = PROJECT_PATH + '/data/test.csv'
 
 def sigmoid_reg_log(t):
     """apply the sigmoid_reg_log function on t."""
-    # t[t>500] = 500
-    # t[t<-500] = -500
+    sigma_t = (1+np.exp(-t))**(-1)
+    t[t>500] = 500
+    t[t<-500] = -500
     sigma_t = 1.0/(1+np.exp(-t))
     return sigma_t
 
@@ -57,7 +58,8 @@ def learning_by_penalized_gradient(y, tx, w, gamma, lambda_):
 
 def reg_logisitic_regression(y, x, initial_w, max_iter, gamma):
     # init parameters
-    threshold = 1e-8
+    threshold = 1e-2
+    gamma = 0.01
     lambda_ = 0.0001
     losses = []
 

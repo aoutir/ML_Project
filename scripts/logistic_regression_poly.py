@@ -1,103 +1,24 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from proj1_helpers import *
-# from least_square_SGD import *
-# from least_squares_GD import *
+from least_square_SGD import *
+from least_squares_GD import *
 from least_squares_ridge_regression import *
 from logistic_regression import *
-# from reg_log_reg import *
+from reg_log_reg import *
 
 import os
 PROJECT_PATH = os.path.dirname(os.getcwd())
 DATA_TRAIN_PATH = PROJECT_PATH + '/data/train.csv'
 DATA_TEST_PATH = PROJECT_PATH + '/data/test.csv'
 
-# def sigmoid(t):
-#     """apply the sigmoid function on t."""
-#     sigma_t = (1+np.exp(-t))**(-1)
-#     t[t>500] = 500
-#     t[t<-500] = -500
-#     sigma_t = 1.0/(1+np.exp(-t))
-#     return sigma_t
-#
-#
-# def calculate_loss_log_reg(y, tx, w):
-#     """compute the loss: negative log likelihood."""
-#     sigma_t = sigmoid(tx@w)
-#     N = y.shape[0]
-#     sigma_t[sigma_t == 0] = 0.0000000001
-#     sigma_t[sigma_t == 1] = 0.9999999999
-#     L = 0
-#     for i in range(0,N):
-#         L = L + (-1*(y[i]*np.log(sigma_t[i]) + (1-y[i])*np.log(1-sigma_t[i])))
-#     return L
-#
-# def calculate_gradient_log_reg(y, tx, w):
-#     """compute the gradient of loss."""
-#     sigma_t = sigmoid(tx@w)
-#     y = np.reshape(y, (-1, 1))
-#     G = tx.T@(sigma_t - y)
-#     return G
-#
-# def calculate_hessian_log_reg(y, tx, w):
-#     """return the Hessian of the loss function."""
-#
-#     # calculate Hessian:
-#     predictions = sigmoid(tx@w)
-#     H = tx.T@(predictions*(1-predictions)*tx)
-#     return H
-#
-# def logistic_regression(y, tx, w):
-#     """return the loss, gradient, and Hessian."""
-#
-#     L = calculate_loss_log_reg(y, tx, w)
-#     G = calculate_gradient_log_reg(y, tx, w)
-#     H = calculate_hessian_log_reg(y, tx, w)
-#     # return loss, gradient, and Hessian
-#     return L, G, H
-#
-#
-# def learning_by_newton_method(y, tx, w, gamma):
-#     """
-#     Do one step on Newton's method.
-#     return the loss and updated w.
-#     """
-#     # return loss, gradient and Hessian
-#     L, G, H = logistic_regression(y, tx, w)
-#     w = w - gamma*np.linalg.solve(H,G)
-#
-#     return L, w
-#
-# def standardize(x):
-#     ''' fill your code in here...
-#     '''
-#     x = x - np.mean(x, axis=0)
-#     x /= np.std(x, axis=0)
-#
-#     return x
-#
-# def logistic_regression_newton_method_demo(y, x, initial_w, max_iter, gamma):
-#     # init parameters
-#
-#     threshold = 1e-3
-#     losses = []
-#
-#     # build tx
-#     tx = np.c_[x]
-#     w = initial_w
-#
-#     # start the logistic regression
-#     for iter in range(max_iter):
-#         # get loss and update w.
-#         loss, w = learning_by_newton_method(y, tx, w, gamma)
-#         # log info
-#         if iter % 1 == 0:
-#             print("Current iteration={i}, the loss={l}".format(i=iter, l=loss))
-#         # converge criterion
-#         losses.append(loss)
-#         if len(losses) > 1 and np.abs(losses[-1] - losses[-2]) < threshold:
-#             break
-#     return w, losses
+def standardize(x):
+    ''' Removing the mean and the standard deviation
+    '''
+    x = x - np.mean(x, axis=0)
+    x /= np.std(x, axis=0)
+
+    return x
 
 def build_poly(x, degree):
     """polynomial basis functions for input data x, for j=0 up to j=degree."""
@@ -169,7 +90,7 @@ def main():
     _, tX_test, ids_test = load_csv_data(DATA_TEST_PATH)
     # setting hyper parameters
     max_iter = 10000
-    gamma = 0.1
+    gamma = 0.01
     degree = 3
     lambda_ridge_regression = 0.016
     y_0, tX_0, ids_0, y_1, tX_1, ids_1, y_23, tX_23, ids_23 = preprocessing(y, tX, ids)
@@ -189,16 +110,17 @@ def main():
     # picking which algorithm to use to get the weights
     methd = input("Which Method do you want to use: \n [1] Least Squares GD \n [2] Least Squares SGD \n [3] Least Squares \n [4] Ridge Regression \n [5] Logistic Regression \n [6] Regulated Logistic Regression \n ")
     methd = int(methd)
+    print('Method Chosen: ', methd)
     if methd == 1:
         print('Running Least Squares GD')
-        w_0, losses_0 = logistic_regression_newton_method_demo(y_0, tx_0_p, np.zeros((tx_0_p.shape[1], 1)), max_iter, gamma)
-        w_1, losses_1 = logistic_regression_newton_method_demo(y_1, tx_1_p, np.zeros((tx_1_p.shape[1], 1)), max_iter, gamma)
-        w_23, losses_23 = logistic_regression_newton_method_demo(y_23, tx_23_p, np.zeros((tx_23_p.shape[1], 1)), max_iter, gamma)
+        losses_0, w_0= gradient_descent_demo(y_0, tX_0, np.zeros((tX_0.shape[1], 1)), max_iter, gamma)
+        losses_1, w_1 = gradient_descent_demo(y_1, tX_1, np.zeros((tX_1.shape[1], 1)), max_iter, gamma)
+        losses_23, w_23 = gradient_descent_demo(y_23, tX_23, np.zeros((tX_23.shape[1], 1)), max_iter, gamma)
     if methd == 2:
         print('Running Least Squares SGD')
-        w_0, losses_0 = logistic_regression_newton_method_demo(y_0, tx_0_p, np.zeros((tx_0_p.shape[1], 1)), max_iter, gamma)
-        w_1, losses_1 = logistic_regression_newton_method_demo(y_1, tx_1_p, np.zeros((tx_1_p.shape[1], 1)), max_iter, gamma)
-        w_23, losses_23 = logistic_regression_newton_method_demo(y_23, tx_23_p, np.zeros((tx_23_p.shape[1], 1)), max_iter, gamma)
+        w_0, losses_0 = stochastic_gradient_descent(y_0, tx_0_p, np.zeros((tx_0_p.shape[1], 1)), batch_size, max_iter, gamma)
+        w_1, losses_1 = stochastic_gradient_descent(y_1, tx_1_p, np.zeros((tx_1_p.shape[1], 1)), batch_size, max_iter, gamma)
+        w_23, losses_23 = stochastic_gradient_descent(y_23, tx_23_p, np.zeros((tx_23_p.shape[1], 1)), batch_size, max_iter, gamma)
     if methd == 3:
         print('Running Least Squares')
         w_0, losses_0 = least_squares_demo(y_0, tx_0_p)
@@ -220,8 +142,10 @@ def main():
         w_1, losses_1 = reg_logisitic_regression(y_1, tx_1_p, np.zeros((tx_1_p.shape[1], 1)), max_iter, gamma)
         w_23, losses_23 = reg_logisitic_regression(y_23, tx_23_p, np.zeros((tx_23_p.shape[1], 1)), max_iter, gamma)
     else:
-        print('Pick Something between 1 and 6')
-        main()
+        print('Picked Something outside 1 and 6. Will do Gradient Descent')
+        losses_0, w_0= gradient_descent_demo(y_0, tX_0, np.zeros((tX_0.shape[1], 1)), max_iter, gamma)
+        losses_1, w_1 = gradient_descent_demo(y_1, tX_1, np.zeros((tX_1.shape[1], 1)), max_iter, gamma)
+        losses_23, w_23 = gradient_descent_demo(y_23, tX_23, np.zeros((tX_23.shape[1], 1)), max_iter, gamma)
     # deciding whether to use polynomial expension of the data
     if augm == 1:
         y_pred = np.zeros((len(tX_test),1))
