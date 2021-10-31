@@ -74,25 +74,18 @@ def least_squares_demo(y , tx):
     #plt.plot(x_train ,y_train , "kx" )
     tx = standardize(tx)
     # define parameters
-    degrees = [3]
     # define the structure of the figure
     num_row = 2
     num_col = 2
     f, axs = plt.subplots(num_row, num_col)
-
-    for ind, degree in enumerate(degrees):      
-        # calculate weight through least square
-        mse_tr , w = least_squares(y, tx)
-   
-        # calculate RMSE for train data,
-        # and store them in rmse_tr 
-        rmse_tr = np.sqrt(2 * compute_mse(y_train-tx_train_poly.dot(w)))
-        print("Processing {i}th experiment, degree={d}, Training RMSE={tr:.3f}".format(
-               i=ind + 1 , d=degree, tr=rmse_tr))
-    
+    # calculate weight through least square
+    mse_tr , w = least_squares(y, tx)  
+    # calculate RMSE for train data,
+    # and store them in rmse_tr 
+    rmse_tr = np.sqrt(2 * compute_mse(y_train-tx_train_poly.dot(w)))
+    print("Training RMSE={tr:.3f}".format(tr=rmse_tr)) 
     return w , mse_tr
-       
-    
+           
     # plot fitted curve of test data 
         
         #plot_fitted_curve(y_test, tx_test_poly, weight, degree, axs[ind // num_col][ind % num_col])
