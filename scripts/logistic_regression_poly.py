@@ -165,6 +165,7 @@ def main():
     max_iter = 10000
     gamma = 0.1
     degree = 3
+    lambda_ridge_regression = 0.016
     y_0, tX_0, ids_0, y_1, tX_1, ids_1, y_23, tX_23, ids_23 = preprocessing(y, tX, ids)
 
     augm = input("Do you want to do data augmenting? [1] Yes, [2] No ")
@@ -194,14 +195,14 @@ def main():
         w_23, losses_23 = logistic_regression_newton_method_demo(y_23, tx_23_p, np.zeros((tx_23_p.shape[1], 1)), max_iter, gamma)
     if methd == 3:
         print('Running Least Squares')
-        w_0, losses_0 = logistic_regression_newton_method_demo(y_0, tx_0_p, np.zeros((tx_0_p.shape[1], 1)), max_iter, gamma)
-        w_1, losses_1 = logistic_regression_newton_method_demo(y_1, tx_1_p, np.zeros((tx_1_p.shape[1], 1)), max_iter, gamma)
-        w_23, losses_23 = logistic_regression_newton_method_demo(y_23, tx_23_p, np.zeros((tx_23_p.shape[1], 1)), max_iter, gamma)
+        w_0, losses_0 = least_squares_demo(y_0, tx_0_p)
+        w_1, losses_1 = least_squares_demo(y_1, tx_1_p)
+        w_23, losses_23 = least_squares_demo(y_23, tx_23_p)
     if methd == 4:
         print('Running Ridge Regression')
-        w_0, losses_0 = logistic_regression_newton_method_demo(y_0, tx_0_p, np.zeros((tx_0_p.shape[1], 1)), max_iter, gamma)
-        w_1, losses_1 = logistic_regression_newton_method_demo(y_1, tx_1_p, np.zeros((tx_1_p.shape[1], 1)), max_iter, gamma)
-        w_23, losses_23 = logistic_regression_newton_method_demo(y_23, tx_23_p, np.zeros((tx_23_p.shape[1], 1)), max_iter, gamma)
+        w_0, losses_0 = ridge_regression_demo( y_0, tx_0_p , lambda_)
+        w_1, losses_1 = ridge_regression_demo( y_1, tx_1_p , lambda_)
+        w_23, losses_23 = ridge_regression_demo( y_23, tx_23_p, lambda_)
     elif methd == 5:
         print('Running Logistic Regression')
         w_0, losses_0 = logistic_regression_newton_method_demo(y_0, tx_0_p, np.zeros((tx_0_p.shape[1], 1)), max_iter, gamma)
