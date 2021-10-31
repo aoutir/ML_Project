@@ -12,6 +12,26 @@ PROJECT_PATH = os.path.dirname(os.getcwd())
 DATA_TRAIN_PATH = PROJECT_PATH + '/data/train.csv'
 DATA_TEST_PATH = PROJECT_PATH + '/data/test.csv'
 
+
+def load_csv_data(data_path, sub_sample=False):
+    """Loads data and returns y (class labels), tX (features) and ids (event ids)"""
+    y = np.genfromtxt(data_path, delimiter=",", skip_header=1, dtype=str, usecols=1)
+    x = np.genfromtxt(data_path, delimiter=",", skip_header=1)
+    ids = x[:, 0].astype(np.int)
+    input_data = x[:, 2:]
+
+    # convert class labels from strings to binary (-1,1)
+    yb = np.ones(len(y))
+    yb[np.where(y=='b')] = -1
+
+    # sub-sample
+    if sub_sample:
+        yb = yb[::50]
+        input_data = input_data[::50]
+        ids = ids[::50]
+
+    return yb, input_data, ids
+
 def standardize(x):
     ''' Removing the mean and the standard deviation
     '''
@@ -21,7 +41,7 @@ def standardize(x):
     return x
 
 def build_poly(x, degree):
-    """polynomial basis functions for input data x, for j=0 up to j=degree."""
+    """polynomial basis functions for input data x, for i=0 up to i=degree."""
     temp = np.ones((len(x),1))
     for i in range(1,degree+1):
         new = np.power(x,i)
@@ -86,6 +106,7 @@ def preprocessing(y, tX, ids):
     return y_0, tX_0, ids_0, y_1, tX_1, ids_1, y_23, tX_23, ids_23
 
 def main():
+    # load the data
     y, tX, ids = load_csv_data(DATA_TRAIN_PATH)
     _, tX_test, ids_test = load_csv_data(DATA_TEST_PATH)
     # setting hyper parameters
@@ -133,11 +154,18 @@ def main():
         w_23, losses_23 = ridge_regression_demo( y_23, tx_23_p, lambda_)
     elif methd == 5:
         print('Running Logistic Regression')
+        y_0[y_0==-1] = 0
+        y_1[y_1==-1] = 0
+        y_23[y_23==-1] = 0
+        print(y_0[5],y_0[6],y_0[7])
         w_0, losses_0 = logistic_regression_newton_method_demo(y_0, tx_0_p, np.zeros((tx_0_p.shape[1], 1)), max_iter, gamma)
         w_1, losses_1 = logistic_regression_newton_method_demo(y_1, tx_1_p, np.zeros((tx_1_p.shape[1], 1)), max_iter, gamma)
         w_23, losses_23 = logistic_regression_newton_method_demo(y_23, tx_23_p, np.zeros((tx_23_p.shape[1], 1)), max_iter, gamma)
     elif methd == 6:
         print('Running Regularized Logistic Regression')
+        y_0[y_0==-1] = 0
+        y_1[y_1==-1] = 0
+        y_23[y_23==-1] = 0
         w_0, losses_0 = reg_logisitic_regression(y_0, tx_0_p, np.zeros((tx_0_p.shape[1], 1)), max_iter, gamma)
         w_1, losses_1 = reg_logisitic_regression(y_1, tx_1_p, np.zeros((tx_1_p.shape[1], 1)), max_iter, gamma)
         w_23, losses_23 = reg_logisitic_regression(y_23, tx_23_p, np.zeros((tx_23_p.shape[1], 1)), max_iter, gamma)
@@ -146,7 +174,7 @@ def main():
         losses_0, w_0= gradient_descent_demo(y_0, tX_0, np.zeros((tX_0.shape[1], 1)), max_iter, gamma)
         losses_1, w_1 = gradient_descent_demo(y_1, tX_1, np.zeros((tX_1.shape[1], 1)), max_iter, gamma)
         losses_23, w_23 = gradient_descent_demo(y_23, tX_23, np.zeros((tX_23.shape[1], 1)), max_iter, gamma)
-    # deciding whether to use polynomial expension of the data
+    # deciding whether to use polynomial expansion of the data
     if augm == 1:
         y_pred = np.zeros((len(tX_test),1))
         tX_test = build_poly(tX_test, degree)
