@@ -1,6 +1,11 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from proj1_helpers import *
+# from least_square_SGD import *
+# from least_squares_GD import *
+# from least_squares_ridge_regression import *
+# from reg_log_reg import *
+
 import os
 PROJECT_PATH = os.path.dirname(os.getcwd())
 DATA_TRAIN_PATH = PROJECT_PATH + '/data/train.csv'
@@ -68,7 +73,7 @@ def standardize(x):
 def logistic_regression_newton_method_demo(y, x, initial_w, max_iter, gamma):
     # init parameters
 
-    threshold = 7
+    threshold = 1e-6
     losses = []
 
     # build tx
@@ -84,7 +89,7 @@ def logistic_regression_newton_method_demo(y, x, initial_w, max_iter, gamma):
             print("Current iteration={i}, the loss={l}".format(i=iter, l=loss))
         # converge criterion
         losses.append(loss)
-        if len(losses) > 1 and losses[-1] < 0:
+        if len(losses) > 1 and np.abs(losses[-1] - losses[-2]) < threshold:
             break
     return w, losses
 
@@ -131,7 +136,7 @@ def preprocessing(y, tX, ids):
     y_0, tX_0, ids_0, y_1, tX_1, ids_1, y_23, tX_23, ids_23 = np.asarray(y_0), np.asarray(tX_0), np.asarray(ids_0), np.asarray(y_1), np.asarray(tX_1), np.asarray(ids_1), np.asarray(y_23), np.asarray(tX_23), np.asarray(ids_23)
     # removing unnecessary features
     tX_0 = np.delete(tX_0, [4,5,6,12,22,23,24,25,26,27,28,29], 1)
-    tX_1 = np.delete(tX_1, [4,5,6,12,22,26,27,28,29], 1)
+    tX_1 = np.delete(tX_1, [4,5,6,12,22,26,27,28], 1)
     tX_23 = np.delete(tX_23, [22], 1)
     # getting the median of every feature for each experiment
     feature_median_0 = np.median(tX_0, axis = 0)
@@ -147,18 +152,18 @@ def preprocessing(y, tX, ids):
         temp[temp == -999] = feature_median_1[temp == -999] #+ np.random.rand(1)*0.01
         tX_1[i,:] = temp
     # standardizizing the data by removing the mean and the standard deviation
-    # tX_0 = standardize(tX_0)
-    # tX_1 = standardize(tX_1)
-    # tX_23 = standardize(tX_23)
+    tX_0 = standardize(tX_0)
+    tX_1 = standardize(tX_1)
+    tX_23 = standardize(tX_23)
     # returning the data
     return y_0, tX_0, ids_0, y_1, tX_1, ids_1, y_23, tX_23, ids_23
 
-if __name__ == "__main__":
+def main():
     y, tX, ids = load_csv_data(DATA_TRAIN_PATH)
     _, tX_test, ids_test = load_csv_data(DATA_TEST_PATH)
     # setting hyper parameters
     max_iter = 10000
-    gamma = 0.01
+    gamma = 0.1
     degree = 3
     y_0, tX_0, ids_0, y_1, tX_1, ids_1, y_23, tX_23, ids_23 = preprocessing(y, tX, ids)
 
@@ -175,25 +180,48 @@ if __name__ == "__main__":
         tx_23_p = tX_23
         print('Data augmentation skipped')
     # picking which algorithm to use to get the weights
-    methd = input("Which Method do you want to use: [1] Logistic Regression, [2] Regulated Logistic Regression ")
+    methd = input("Which Method do you want to use: \n [1] Least Squares GD \n [2] Least Squares SGD \n [3] Least Squares \n [4] Ridge Regression \n [5] Logistic Regression \n [6] Regulated Logistic Regression \n ")
     methd = int(methd)
     if methd == 1:
+        print('Running Least Squares GD')
+        w_0, losses_0 = logistic_regression_newton_method_demo(y_0, tx_0_p, np.zeros((tx_0_p.shape[1], 1)), max_iter, gamma)
+        w_1, losses_1 = logistic_regression_newton_method_demo(y_1, tx_1_p, np.zeros((tx_1_p.shape[1], 1)), max_iter, gamma)
+        w_23, losses_23 = logistic_regression_newton_method_demo(y_23, tx_23_p, np.zeros((tx_23_p.shape[1], 1)), max_iter, gamma)
+    if methd == 2:
+        print('Running Least Squares SGD')
+        w_0, losses_0 = logistic_regression_newton_method_demo(y_0, tx_0_p, np.zeros((tx_0_p.shape[1], 1)), max_iter, gamma)
+        w_1, losses_1 = logistic_regression_newton_method_demo(y_1, tx_1_p, np.zeros((tx_1_p.shape[1], 1)), max_iter, gamma)
+        w_23, losses_23 = logistic_regression_newton_method_demo(y_23, tx_23_p, np.zeros((tx_23_p.shape[1], 1)), max_iter, gamma)
+    if methd == 3:
+        print('Running Least Squares')
+        w_0, losses_0 = logistic_regression_newton_method_demo(y_0, tx_0_p, np.zeros((tx_0_p.shape[1], 1)), max_iter, gamma)
+        w_1, losses_1 = logistic_regression_newton_method_demo(y_1, tx_1_p, np.zeros((tx_1_p.shape[1], 1)), max_iter, gamma)
+        w_23, losses_23 = logistic_regression_newton_method_demo(y_23, tx_23_p, np.zeros((tx_23_p.shape[1], 1)), max_iter, gamma)
+    if methd == 4:
+        print('Running Ridge Regression')
+        w_0, losses_0 = logistic_regression_newton_method_demo(y_0, tx_0_p, np.zeros((tx_0_p.shape[1], 1)), max_iter, gamma)
+        w_1, losses_1 = logistic_regression_newton_method_demo(y_1, tx_1_p, np.zeros((tx_1_p.shape[1], 1)), max_iter, gamma)
+        w_23, losses_23 = logistic_regression_newton_method_demo(y_23, tx_23_p, np.zeros((tx_23_p.shape[1], 1)), max_iter, gamma)
+    elif methd == 5:
         print('Running Logistic Regression')
         w_0, losses_0 = logistic_regression_newton_method_demo(y_0, tx_0_p, np.zeros((tx_0_p.shape[1], 1)), max_iter, gamma)
         w_1, losses_1 = logistic_regression_newton_method_demo(y_1, tx_1_p, np.zeros((tx_1_p.shape[1], 1)), max_iter, gamma)
         w_23, losses_23 = logistic_regression_newton_method_demo(y_23, tx_23_p, np.zeros((tx_23_p.shape[1], 1)), max_iter, gamma)
+    elif methd == 6:
+        print('Running Regularized Logistic Regression')
+        w_0, losses_0 = reg_logisitic_regression(y_0, tx_0_p, np.zeros((tx_0_p.shape[1], 1)), max_iter, gamma)
+        w_1, losses_1 = reg_logisitic_regression(y_1, tx_1_p, np.zeros((tx_1_p.shape[1], 1)), max_iter, gamma)
+        w_23, losses_23 = reg_logisitic_regression(y_23, tx_23_p, np.zeros((tx_23_p.shape[1], 1)), max_iter, gamma)
     else:
-        print('Running else ')
-        w_0, losses_0 = logistic_regression_newton_method_demo(y_0, tx_0_p, np.zeros((tx_0_p.shape[1], 1)), max_iter, gamma)
-        w_1, losses_1 = logistic_regression_newton_method_demo(y_1, tx_1_p, np.zeros((tx_1_p.shape[1], 1)), max_iter, gamma)
-        w_23, losses_23 = logistic_regression_newton_method_demo(y_23, tx_23_p, np.zeros((tx_23_p.shape[1], 1)), max_iter, gamma)
+        print('Pick Something between 1 and 6')
+        main()
     # deciding whether to use polynomial expension of the data
     if augm == 1:
         y_pred = np.zeros((len(tX_test),1))
         tX_test = build_poly(tX_test, degree)
         # Get the results for the testg data with the different weights based on the experiment number
         delete_0 = np.array([4,5,6,12,22,23,24,25,26,27,28,29])
-        delete_1 = np.array([4,5,6,12,22,26,27,28,29])
+        delete_1 = np.array([4,5,6,12,22,26,27,28])
         delete_23 = np.array([22])
         delete_0_i = delete_0
         delete_1_i = delete_1
@@ -216,7 +244,7 @@ if __name__ == "__main__":
                 y_pred[i] = np.dot(tmp, w_23)
         y_pred[np.where(y_pred <= 0)] = -1
         y_pred[np.where(y_pred > 0)] = 1
-        create_csv_submission(ids_test, y_pred, 'RESULTS.csv')
+        create_csv_submission(ids_test, y_pred, 'Results_with_Augmentation.csv')
     else:
         y_pred = np.zeros((len(tX_test),1))
         # Get the results for the testg data with the different weights based on the experiment number
@@ -225,11 +253,14 @@ if __name__ == "__main__":
                 tmp = np.delete(tX_test[i,:], [4,5,6,12,22,23,24,25,26,27,28,29])
                 y_pred[i] = np.dot(tmp, w_0)
             if tX_test[i,22] == 1:
-                tmp = np.delete(tX_test[i,:], [4,5,6,12,22,26,27,28,29])
+                tmp = np.delete(tX_test[i,:], [4,5,6,12,22,26,27,28])
                 y_pred[i] = np.dot(tmp, w_1)
             else:
                 tmp = np.delete(tX_test[i,:], [22])
                 y_pred[i] = np.dot(tmp, w_23)
         y_pred[np.where(y_pred <= 0)] = -1
         y_pred[np.where(y_pred > 0)] = 1
-        create_csv_submission(ids_test, y_pred, 'resultsmedian.csv')
+        create_csv_submission(ids_test, y_pred, 'Results_No_Augmentation.csv')
+
+if __name__ == "__main__":
+    main()
