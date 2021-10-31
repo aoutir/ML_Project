@@ -130,7 +130,7 @@ def preprocessing(y, tX, ids):
     # converting the data to numpy arrays
     y_0, tX_0, ids_0, y_1, tX_1, ids_1, y_23, tX_23, ids_23 = np.asarray(y_0), np.asarray(tX_0), np.asarray(ids_0), np.asarray(y_1), np.asarray(tX_1), np.asarray(ids_1), np.asarray(y_23), np.asarray(tX_23), np.asarray(ids_23)
     # removing unnecessary features
-    tX_0 = np.delete(tX_0, [4,5,6,8,12,22,23,24,25,26,27,28,29], 1)
+    tX_0 = np.delete(tX_0, [4,5,6,12,22,23,24,25,26,27,28,29], 1)
     tX_1 = np.delete(tX_1, [4,5,6,12,22,26,27,28,29], 1)
     tX_23 = np.delete(tX_23, [22], 1)
     # getting the median of every feature for each experiment
@@ -192,7 +192,7 @@ if __name__ == "__main__":
         y_pred = np.zeros((len(tX_test),1))
         tX_test = build_poly(tX_test, degree)
         # Get the results for the testg data with the different weights based on the experiment number
-        delete_0 = np.array([4,5,6,8,12,22,23,24,25,26,27,28,29])
+        delete_0 = np.array([4,5,6,12,22,23,24,25,26,27,28,29])
         delete_1 = np.array([4,5,6,12,22,26,27,28,29])
         delete_23 = np.array([22])
         delete_0_i = delete_0
@@ -204,11 +204,6 @@ if __name__ == "__main__":
                 delete_0_i = np.concatenate((delete_0_i, delete_0+(30*i)), axis=None)
                 delete_1_i = np.concatenate((delete_1_i, delete_1+(30*i)), axis=None)
                 delete_2_i = np.concatenate((delete_2_i, delete_23+(30*i)), axis=None)
-            # delete_0 = np.reshape(delete_0, (1, -1))
-            # delete_1 = np.reshape(delete_1, (1, -1))
-            # delete_23 = np.reshape(delete_23, (1, -1))
-            print('delete_23: ', delete_2_i)
-            print('delete_1: ',  delete_1)
         for i in range(0,len(tX_test)):
             if tX_test[i,22] == 0:
                 tmp = np.delete(tX_test[i,:], delete_0_i)
@@ -227,7 +222,7 @@ if __name__ == "__main__":
         # Get the results for the testg data with the different weights based on the experiment number
         for i in range(0,len(tX_test)):
             if tX_test[i,22] == 0:
-                tmp = np.delete(tX_test[i,:], [4,5,6,8,12,22,23,24,25,26,27,28,29])
+                tmp = np.delete(tX_test[i,:], [4,5,6,12,22,23,24,25,26,27,28,29])
                 y_pred[i] = np.dot(tmp, w_0)
             if tX_test[i,22] == 1:
                 tmp = np.delete(tX_test[i,:], [4,5,6,12,22,26,27,28,29])
