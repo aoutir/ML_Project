@@ -82,7 +82,7 @@ def least_squares_demo(y , tx):
     mse_tr , w = least_squares(y, tx)  
     # calculate RMSE for train data,
     # and store them in rmse_tr 
-    rmse_tr = np.sqrt(2 * compute_mse(y_train-tx_train_poly.dot(w)))
+    rmse_tr = np.sqrt(2 * compute_mse(y-tx.dot(w)))
     print("Training RMSE={tr:.3f}".format(tr=rmse_tr)) 
     return w , mse_tr
            
@@ -116,11 +116,11 @@ def ridge_regression_demo( y , tx , lambda_):
     standadizes the data , computes the weight using ridge regression and 
     returns the weight and the loss RMSE"""   
 
-    x_train = standardize(x_train)        
+    tx = standardize(tx)        
     weight = ridge_regression(y, tx, lambda_)
-    rmse_tr = np.sqrt(2 * compute_mse(y_train-tx_train_poly.dot(w)))
+    rmse_tr = np.sqrt(2 * compute_mse(y-tx.dot(weight)))
     print("  lambda={l:.3f}, Training RMSE={tr:.3f}".format(
-           l=lambda_, tr=rmse_tr[ind] ))
-    return weight , loss
+           l=lambda_, tr=rmse_tr ))
+    return weight , rmse_tr
     
 
