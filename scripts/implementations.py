@@ -99,9 +99,9 @@ def preprocessing(y, tX, ids):
         temp[temp == -999] = feature_median_1[temp == -999] #+ np.random.rand(1)*0.01
         tX_1[i,:] = temp
     # standardizizing the data by removing the mean and the standard deviation
-    tX_0 = standardize(tX_0)
-    tX_1 = standardize(tX_1)
-    tX_23 = standardize(tX_23)
+    # tX_0 = standardize(tX_0)
+    # tX_1 = standardize(tX_1)
+    # tX_23 = standardize(tX_23)
     # returning the data
     return y_0, tX_0, ids_0, y_1, tX_1, ids_1, y_23, tX_23, ids_23
 
@@ -112,13 +112,15 @@ def main():
     # setting hyper parameters
     max_iter = 10000
     gamma = 0.01
-    degree = 3
     lambda_ridge_regression = 0.016
     y_0, tX_0, ids_0, y_1, tX_1, ids_1, y_23, tX_23, ids_23 = preprocessing(y, tX, ids)
 
     augm = input("Do you want to do data augmenting? [1] Yes, [2] No ")
     augm = int(augm)
     if augm == 1:
+        deg = input("Pick Degree for polynomial expansion (Recommended: 3-5) ")
+        deg = int(deg)
+        degree = deg
         tx_0_p = build_poly(tX_0, degree)
         tx_1_p = build_poly(tX_1, degree)
         tx_23_p = build_poly(tX_23, degree)
@@ -131,7 +133,6 @@ def main():
     # picking which algorithm to use to get the weights
     methd = input("Which Method do you want to use: \n [1] Least Squares GD \n [2] Least Squares SGD \n [3] Least Squares \n [4] Ridge Regression \n [5] Logistic Regression \n [6] Regulated Logistic Regression \n ")
     methd = int(methd)
-    print('Method Chosen: ', methd)
     if methd == 1:
         print('Running Least Squares GD')
         losses_0, w_0= gradient_descent_demo(y_0, tX_0, np.zeros((tX_0.shape[1], 1)), max_iter, gamma)
@@ -139,9 +140,9 @@ def main():
         losses_23, w_23 = gradient_descent_demo(y_23, tX_23, np.zeros((tX_23.shape[1], 1)), max_iter, gamma)
     if methd == 2:
         print('Running Least Squares SGD')
-        w_0, losses_0 = stochastic_gradient_descent(y_0, tx_0_p, np.zeros((tx_0_p.shape[1], 1)), batch_size, max_iter, gamma)
-        w_1, losses_1 = stochastic_gradient_descent(y_1, tx_1_p, np.zeros((tx_1_p.shape[1], 1)), batch_size, max_iter, gamma)
-        w_23, losses_23 = stochastic_gradient_descent(y_23, tx_23_p, np.zeros((tx_23_p.shape[1], 1)), batch_size, max_iter, gamma)
+        losses_0, w_0 = stochastic_gradient_descent(y_0, tx_0_p, np.zeros((tx_0_p.shape[1], 1)), batch_size, max_iter, gamma)
+        losses_1, w_1 = stochastic_gradient_descent(y_1, tx_1_p, np.zeros((tx_1_p.shape[1], 1)), batch_size, max_iter, gamma)
+        losses_23, w_23 = stochastic_gradient_descent(y_23, tx_23_p, np.zeros((tx_23_p.shape[1], 1)), batch_size, max_iter, gamma)
     if methd == 3:
         print('Running Least Squares')
         w_0, losses_0 = least_squares_demo(y_0, tx_0_p)
@@ -157,7 +158,6 @@ def main():
         y_0[y_0==-1] = 0
         y_1[y_1==-1] = 0
         y_23[y_23==-1] = 0
-        print(y_0[5],y_0[6],y_0[7])
         w_0, losses_0 = logistic_regression_newton_method_demo(y_0, tx_0_p, np.zeros((tx_0_p.shape[1], 1)), max_iter, gamma)
         w_1, losses_1 = logistic_regression_newton_method_demo(y_1, tx_1_p, np.zeros((tx_1_p.shape[1], 1)), max_iter, gamma)
         w_23, losses_23 = logistic_regression_newton_method_demo(y_23, tx_23_p, np.zeros((tx_23_p.shape[1], 1)), max_iter, gamma)
@@ -191,11 +191,14 @@ def main():
                 delete_0_i = np.concatenate((delete_0_i, delete_0+(30*i)), axis=None)
                 delete_1_i = np.concatenate((delete_1_i, delete_1+(30*i)), axis=None)
                 delete_2_i = np.concatenate((delete_2_i, delete_23+(30*i)), axis=None)
+        # print(tX_test.shape)
+        # tX_test = np.concatenate((np.ones((tX_test.shape[0], 1)), tX_test), axis=1)
+        # print(tX_test.shape)
         for i in range(0,len(tX_test)):
-            if tX_test[i,22] == 0:
+            if tX_test[i,23] == 0:
                 tmp = np.delete(tX_test[i,:], delete_0_i)
                 y_pred[i] = np.dot(tmp, w_0)
-            if tX_test[i,22] == 1:
+            if tX_test[i,23] == 1:
                 tmp = np.delete(tX_test[i,:], delete_1_i)
                 y_pred[i] = np.dot(tmp, w_1)
             else:
@@ -206,6 +209,9 @@ def main():
         create_csv_submission(ids_test, y_pred, 'Results_with_Augmentation.csv')
     else:
         y_pred = np.zeros((len(tX_test),1))
+        # print(tX_test.shape)
+        # tX_test = np.concatenate((np.ones((tX_test.shape[0], 1)), tX_test), axis=1)
+        # print(tX_test.shape)
         # Get the results for the testg data with the different weights based on the experiment number
         for i in range(0,len(tX_test)):
             if tX_test[i,22] == 0:

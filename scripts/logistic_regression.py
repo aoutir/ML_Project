@@ -26,9 +26,8 @@ def calculate_loss_log_reg(y, tx, w):
     N = y.shape[0]
     sigma_t[sigma_t == 0] = 0.0000000001
     sigma_t[sigma_t == 1] = 0.9999999999
-    L = 0
-    for i in range(0,N):
-        L = L + (-1*(y[i]*np.log(sigma_t[i]) + (1-y[i])*np.log(1-sigma_t[i])))
+    L =  y.T@np.log(sigma_t) + (1 - y).T@np.log(1 - sigma_t)
+    L = np.squeeze(-L)
     return L
 
 def calculate_gradient_log_reg(y, tx, w):
@@ -74,15 +73,17 @@ def logistic_regression_newton_method_demo(y, x, initial_w, max_iter, gamma):
     losses = []
 
     # build tx
+    # tx = np.c_[np.ones((y.shape[0], 1)), x]
+    # w = np.zeros((tx.shape[1], 1))
+    # initial_w = w
     tx = np.c_[x]
     w = initial_w
-
     # start the logistic regression
     for iter in range(max_iter):
         # get loss and update w.
         loss, w = learning_by_newton_method(y, tx, w, gamma)
         # log info
-        if iter % 1 == 0:
+        if iter % 10 == 0:
             print("Current iteration={i}, the loss={l}".format(i=iter, l=loss))
         # converge criterion
         losses.append(loss)

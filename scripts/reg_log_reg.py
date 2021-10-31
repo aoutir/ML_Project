@@ -8,7 +8,6 @@ DATA_TEST_PATH = PROJECT_PATH + '/data/test.csv'
 
 def sigmoid_reg_log(t):
     """apply the sigmoid_reg_log function on t."""
-    sigma_t = (1+np.exp(-t))**(-1)
     t[t>500] = 500
     t[t<-500] = -500
     sigma_t = 1.0/(1+np.exp(-t))
@@ -16,16 +15,14 @@ def sigmoid_reg_log(t):
 
 
 def calculate_penalized_loss(y, tx, w, lambda_):
-    """compute the loss: negative log likelihood."""
+    """compute the cost by negative log likelihood."""
     sigma_t = sigmoid_reg_log(tx@w)
-    N = y.shape[0]
-    L = 0
-    sigma_t[sigma_t == 0] = 0.0000000001
-    sigma_t[sigma_t == 1] = 0.9999999999
-    for i in range(0,N):
-        L = L + (-1*(y[i]*np.log(sigma_t[i]) + (1-y[i])*np.log(1-sigma_t[i])))
-    L = L + lambda_*np.linalg.norm(w.T@w, ord=2)
+    sigma_t[sigma_t == 0] = 0.00000001
+    sigma_t[sigma_t == 1] = 0.99999999
+    loss = y.T@np.log(sigma_t) + (1 - y).T@np.log(1 - sigma_t)
+    L =  np.squeeze(-loss) + lambda_ * np.squeeze(w.T@w)
     return L
+
 
 def calculate_penalized_gradient(y, tx, w, lambda_):
     """compute the gradient of loss."""
@@ -49,23 +46,24 @@ def learning_by_penalized_gradient(y, tx, w, gamma, lambda_):
     """
 
     # return loss, gradient
-    loss, G = penalized_logistic_regression(y, tx, w, lambda_)
+    L, G = penalized_logistic_regression(y, tx, w, lambda_)
 
     # update w
     w = w - gamma*G
-    return loss, w
+    return L, w
 
 
 def reg_logisitic_regression(y, x, initial_w, max_iter, gamma):
     # init parameters
     threshold = 1e-2
-    gamma = 0.01
-    lambda_ = 0.0001
+    gamma = 0.0001
+    lambda_ = 0.00000001
     losses = []
 
     # build tx
     # tx = np.c_[np.ones((y.shape[0], 1)), x]
-    tx = np.c_[x]
+    # tx = np.c_[x]
+    tx = x
     w = np.zeros((tx.shape[1], 1))
 
     # start the logistic regression
@@ -73,7 +71,7 @@ def reg_logisitic_regression(y, x, initial_w, max_iter, gamma):
         # get loss and update w.
         loss, w = learning_by_penalized_gradient(y, tx, w, gamma, lambda_)
         # log info
-        if iter % 1 == 0:
+        if iter % 100 == 0:
             print("Current iteration={i}, loss={l}".format(i=iter, l=loss))
         # converge criterion
         losses.append(loss)
@@ -81,5 +79,5 @@ def reg_logisitic_regression(y, x, initial_w, max_iter, gamma):
             break
     # visualization
     # visualization(y, x, mean_x, std_x, w, "classification_by_logistic_regression_penalized_gradient_descent",True)
-    print("loss={l}".format(l=calculate_loss(y, tx, w)))
+    # print("loss={l}".format(l=calculate_loss(y, tx, w)))
     return w, losses[-1]
