@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 from proj1_helpers import *
 # from least_square_SGD import *
 # from least_squares_GD import *
-# from least_squares_ridge_regression import *
+from least_squares_ridge_regression import *
 # from reg_log_reg import *
 
 import os
