@@ -1,6 +1,22 @@
+import numpy as np
+import matplotlib.pyplot as plt
+from proj1_helpers import *
+# from least_square_SGD import *
+# from least_squares_GD import *
+from least_squares_ridge_regression import *
+# from reg_log_reg import *
+
+import os
+PROJECT_PATH = os.path.dirname(os.getcwd())
+DATA_TRAIN_PATH = PROJECT_PATH + '/data/train.csv'
+DATA_TEST_PATH = PROJECT_PATH + '/data/test.csv'
+
 def sigmoid(t):
     """apply the sigmoid function on t."""
     sigma_t = (1+np.exp(-t))**(-1)
+    t[t>500] = 500
+    t[t<-500] = -500
+    sigma_t = 1.0/(1+np.exp(-t))
     return sigma_t
 
 
@@ -8,6 +24,8 @@ def calculate_loss_log_reg(y, tx, w):
     """compute the loss: negative log likelihood."""
     sigma_t = sigmoid(tx@w)
     N = y.shape[0]
+    sigma_t[sigma_t == 0] = 0.0000000001
+    sigma_t[sigma_t == 1] = 0.9999999999
     L = 0
     for i in range(0,N):
         L = L + (-1*(y[i]*np.log(sigma_t[i]) + (1-y[i])*np.log(1-sigma_t[i])))
@@ -49,18 +67,10 @@ def learning_by_newton_method(y, tx, w, gamma):
 
     return L, w
 
-def standardize(x):
-    ''' fill your code in here...
-    '''
-    x = x - np.mean(x, axis=0)
-    x /= np.std(x, axis=0)
-
-    return x
-
 def logistic_regression_newton_method_demo(y, x, initial_w, max_iter, gamma):
     # init parameters
 
-    threshold = 1e-6
+    threshold = 1e-3
     losses = []
 
     # build tx
