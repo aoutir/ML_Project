@@ -62,8 +62,10 @@ def reg_logisitic_regression(y, x, initial_w, max_iter, gamma):
     lambda_ = 0.00000001
     losses = []
 
+    # To add a bias term, uncomment the 3 lines below, and comment the two following lines
     # tx = np.c_[np.ones((y.shape[0], 1)), x]
-    # tx = np.c_[x]
+    # w = np.zeros((tx.shape[1], 1))
+    # initial_w = w
     # build tx
     tx = x
     w = np.zeros((tx.shape[1], 1))
@@ -79,7 +81,4 @@ def reg_logisitic_regression(y, x, initial_w, max_iter, gamma):
         losses.append(loss)
         if len(losses) > 1 and np.abs(losses[-1] - losses[-2]) < threshold:
             break
-    # visualization
-    # visualization(y, x, mean_x, std_x, w, "classification_by_logistic_regression_penalized_gradient_descent",True)
-    # print("loss={l}".format(l=calculate_loss(y, tx, w)))
     return w, losses[-1]

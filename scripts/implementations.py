@@ -187,9 +187,9 @@ def main():
                 delete_0_i = np.concatenate((delete_0_i, delete_0+(30*i)), axis=None)
                 delete_1_i = np.concatenate((delete_1_i, delete_1+(30*i)), axis=None)
                 delete_2_i = np.concatenate((delete_2_i, delete_23+(30*i)), axis=None)
-        # print(tX_test.shape)
+        # If a bias term is to be added, uncomment the line below
+        # Note: An example on how to add a bias term is commented in the logisitic regression function
         # tX_test = np.concatenate((np.ones((tX_test.shape[0], 1)), tX_test), axis=1)
-        # print(tX_test.shape)
         for i in range(0,len(tX_test)):
             if tX_test[i,23] == 0:
                 tmp = np.delete(tX_test[i,:], delete_0_i)

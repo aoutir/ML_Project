@@ -24,7 +24,7 @@ def calculate_loss_log_reg(y, tx, w):
     """compute the loss: negative log likelihood."""
     sigma_t = sigmoid(tx@w)
     N = y.shape[0]
-    # Avoid log RunTimeWarnings becasue of illegal values
+    # Avoid log RunTimeWarnings becasue of illegal values, and put limits on the log function
     sigma_t[sigma_t == 0] = 0.0000000001
     sigma_t[sigma_t == 1] = 0.9999999999
     L =  y.T@np.log(sigma_t) + (1 - y).T@np.log(1 - sigma_t)
@@ -73,10 +73,11 @@ def logistic_regression_newton_method_demo(y, x, initial_w, max_iter, gamma):
     threshold = 1e-3
     losses = []
 
-    # build tx
+    # To add a bias term, uncomment the 3 lines below, and comment the two following lines
     # tx = np.c_[np.ones((y.shape[0], 1)), x]
     # w = np.zeros((tx.shape[1], 1))
     # initial_w = w
+    # build tx
     tx = np.c_[x]
     w = initial_w
     # start the logistic regression

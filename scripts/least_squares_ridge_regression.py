@@ -1,24 +1,22 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-# Useful starting lines
-# get_ipython().run_line_magic('matplotlib', 'inline')
 import numpy as np
 import matplotlib.pyplot as plt
 import warnings
 warnings.filterwarnings("error")
-# get_ipython().run_line_magic('load_ext', 'autoreload')
-# get_ipython().run_line_magic('autoreload', '2')
 
 import os
 from proj1_helpers import *
-# from plots import *
 
 
 def standardize(x):
     """standardize the data with mean and standard deviation"""
-    x = x - np.mean(x, axis=0)
-    x /= np.std(x, axis=0)
+    if x.shape[1] > 30:
+        pass
+    else:
+        x = x - np.mean(x, axis=0)
+        x /= np.std(x, axis=0)
     return x
 
 

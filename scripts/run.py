@@ -27,6 +27,13 @@ def load_csv_data(data_path, sub_sample=False):
 
     return yb, input_data, ids
 
+def standardize(x):
+    ''' Removing the mean and the standard deviation
+    '''
+    x = x - np.mean(x, axis=0)
+    x /= np.std(x, axis=0)
+
+    return x
 
 def preprocessing(y, tX, ids):
     """ Splitting the Data based on the Jet Experiment number
