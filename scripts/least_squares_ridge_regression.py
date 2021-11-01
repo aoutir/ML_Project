@@ -43,12 +43,12 @@ def least_squares_demo(y , tx):
        and then running least squares regression."""
     # returns rmse, and weight
 
-<<<<<<< HEAD
-    #plt.plot(x_train ,y_train , "kx" )
     tx = standardize(tx)
-=======
->>>>>>> main
     # define parameters
+    # define the structure of the figure
+    num_row = 2
+    num_col = 2
+    f, axs = plt.subplots(num_row, num_col)
     # calculate weight through least square
     mse_tr , w = least_squares(y, tx)
     # calculate RMSE for train data,
@@ -56,7 +56,6 @@ def least_squares_demo(y , tx):
     rmse_tr = np.sqrt(2 * compute_mse(y-tx.dot(w)))
     print("Training RMSE={tr:.3f}".format(tr=rmse_tr))
     return w , mse_tr
-
 
 def ridge_regression(y, tx, lambda_):
     """implementation of ridge regression method for a given lambda value."""

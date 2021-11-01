@@ -6,6 +6,28 @@ PROJECT_PATH = os.path.dirname(os.getcwd())
 DATA_TRAIN_PATH = PROJECT_PATH + '/data/train.csv'
 DATA_TEST_PATH = PROJECT_PATH + '/data/test.csv'
 
+
+
+def load_csv_data(data_path, sub_sample=False):
+    """Loads data and returns y (class labels), tX (features) and ids (event ids)"""
+    y = np.genfromtxt(data_path, delimiter=",", skip_header=1, dtype=str, usecols=1)
+    x = np.genfromtxt(data_path, delimiter=",", skip_header=1)
+    ids = x[:, 0].astype(np.int)
+    input_data = x[:, 2:]
+
+    # convert class labels from strings to binary (-1,1)
+    yb = np.ones(len(y))
+    yb[np.where(y=='b')] = -1
+
+    # sub-sample
+    if sub_sample:
+        yb = yb[::50]
+        input_data = input_data[::50]
+        ids = ids[::50]
+
+    return yb, input_data, ids
+
+
 def preprocessing(y, tX, ids):
     """ Splitting the Data based on the Jet Experiment number
     Grouping into Exp 0, Exp 1 and Exp 2&3
@@ -158,9 +180,9 @@ if __name__ == "__main__":
     y_0[y_0==-1] = 0
     y_1[y_1==-1] = 0
     y_23[y_23==-1] = 0
-    w_0, losses_0 = logistic_regression_newton_method_demo(y_0, tx_0_p, np.zeros((tx_0_p.shape[1], 1)), max_iter, gamma)
-    w_1, losses_1 = logistic_regression_newton_method_demo(y_1, tx_1_p, np.zeros((tx_1_p.shape[1], 1)), max_iter, gamma)
-    w_23, losses_23 = logistic_regression_newton_method_demo(y_23, tx_23_p, np.zeros((tx_23_p.shape[1], 1)), max_iter, gamma)
+    w_0, losses_0 = logistic_regression_newton_method_demo(y_0, tX_0, np.zeros((tX_0.shape[1], 1)), max_iter, gamma)
+    w_1, losses_1 = logistic_regression_newton_method_demo(y_1, tX_1, np.zeros((tX_1.shape[1], 1)), max_iter, gamma)
+    w_23, losses_23 = logistic_regression_newton_method_demo(y_23, tX_23, np.zeros((tX_23.shape[1], 1)), max_iter, gamma)
 
     ''' Make Predictions on the test data'''
     y_pred = np.zeros((len(tX_test),1))
@@ -174,7 +196,7 @@ if __name__ == "__main__":
         else:
             tmp = np.delete(tX_test[i,:], [22])
             y_pred[i] = np.dot(tmp, w_23)
-    ''' Create Output file '''        
+    ''' Create Output file '''
     y_pred[np.where(y_pred <= 0)] = -1
     y_pred[np.where(y_pred > 0)] = 1
     create_csv_submission(ids_test, y_pred, 'Results_No_Augmentation.csv')
