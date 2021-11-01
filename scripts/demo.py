@@ -132,11 +132,13 @@ def main():
     if methd == 1:
         print('Running Least Squares GD')
         gamma = 0.1
-        losses_0, w_0= gradient_descent_demo(y_0, tX_0, np.zeros((tX_0.shape[1], 1)), max_iter, gamma)
-        losses_1, w_1 = gradient_descent_demo(y_1, tX_1, np.zeros((tX_1.shape[1], 1)), max_iter, gamma)
-        losses_23, w_23 = gradient_descent_demo(y_23, tX_23, np.zeros((tX_23.shape[1], 1)), max_iter, gamma)
+        losses_0, w_0= gradient_descent_demo(y_0, tx_0_p, np.zeros((tx_0_p.shape[1], 1)), max_iter, gamma)
+        losses_1, w_1 = gradient_descent_demo(y_1, tx_1_p, np.zeros((tx_1_p.shape[1], 1)), max_iter, gamma)
+        losses_23, w_23 = gradient_descent_demo(y_23, tx_23_p, np.zeros((tx_23_p.shape[1], 1)), max_iter, gamma)
     elif methd == 2:
         print('Running Least Squares SGD')
+        gamma = 0.0001
+        batch_size = 1
         losses_0, w_0 = stochastic_gradient_descent(y_0, tx_0_p, np.zeros((tx_0_p.shape[1], 1)), batch_size, max_iter, gamma)
         losses_1, w_1 = stochastic_gradient_descent(y_1, tx_1_p, np.zeros((tx_1_p.shape[1], 1)), batch_size, max_iter, gamma)
         losses_23, w_23 = stochastic_gradient_descent(y_23, tx_23_p, np.zeros((tx_23_p.shape[1], 1)), batch_size, max_iter, gamma)

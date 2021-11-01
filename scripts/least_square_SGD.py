@@ -34,6 +34,7 @@ def batch_iter(y, tx, batch_size, num_batches=1, shuffle=True):
 def compute_loss_SGD(y, tx, w):
     """Calculate the loss.
     """
+    y = np.reshape(y, (-1, 1))
     e = y - tx.dot(w)
     loss =  1/2*np.mean(e**2)
     return loss
@@ -44,31 +45,29 @@ def compute_stoch_gradient(y, tx, w):
     grad = -tx.T.dot(err) / len(err)
     return grad, err
 
-def stochastic_gradient_descent(
-        y, tx, initial_w, batch_size, max_iters, gamma):
+def stochastic_gradient_descent(y, tx, initial_w, batch_size, max_iters, gamma):
     """Stochastic gradient descent."""
     # Define parameters to store w and loss
-    ws = [initial_w]
     losses = []
     w = initial_w
-
+    tx = standardize(tx)
+    gamma = 0.0001
+    y = np.reshape(y, (-1, 1))
     for n_iter in range(max_iters):
         for y_batch, tx_batch in batch_iter(y, tx, batch_size=batch_size, num_batches=1):
 
             grad, _ = compute_stoch_gradient(y_batch, tx_batch, w)
             w = w - gamma * grad
             loss = compute_loss_SGD(y, tx, w)
-            # store w and loss
-            ws.append(w)
-            losses.append(loss)
 
         print("SGD({bi}/{ti}): loss={l}, w0={w0}, w1={w1}".format(
               bi=n_iter, ti=max_iters - 1, l=loss, w0=w[0], w1=w[1]))
     return loss, w
 
 def standardize(x):
-
-    centered_data = x - np.mean(x, axis=0)
-    std_data = centered_data / np.std(centered_data, axis=0)
-
-    return std_data
+    if x.shape[1] > 30:
+        pass
+    else:
+        x = x - np.mean(x, axis=0)
+        x /= np.std(x, axis=0)
+    return x

@@ -1,12 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from proj1_helpers import *
-from least_square_SGD import *
-from least_squares_GD import *
-from least_squares_ridge_regression import *
-from logistic_regression import *
-from reg_log_reg import *
-
 import os
 PROJECT_PATH = os.path.dirname(os.getcwd())
 DATA_TRAIN_PATH = PROJECT_PATH + '/data/train.csv'
@@ -72,11 +66,12 @@ def gradient_descent(y, tx, initial_w, max_iters, gamma):
 def optimize_hyperparamters_SGD():
     ''' Grid search to find the best hyperparameter gamma for SGD
     '''
-    learning_rates = [0.001, 0.003, 0.001, 0.03, 0.1, 0.3]
+    batch_size = 1
+    learning_rates = [0.0001, 0.0003, 0.00001, 0.003, 0.02, 0.3]
     print('Running Grid search for Least Squares SGD')
     minloss = float('inf')
     for step in learning_rates:
-        loss, w= least_squares_SGD(y, tX, np.zeros((tX.shape[1], 1)), max_iter, step)
+        loss, w= least_squares_SGD(y, tX, np.zeros((tX.shape[1], 1)), batch_size, max_iter, step)
         if(loss < minloss):
             optimalstep = step
             minloss = loss
