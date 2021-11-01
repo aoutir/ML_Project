@@ -24,6 +24,7 @@ def calculate_loss_log_reg(y, tx, w):
     """compute the loss: negative log likelihood."""
     sigma_t = sigmoid(tx@w)
     N = y.shape[0]
+    # Avoid log RunTimeWarnings becasue of illegal values
     sigma_t[sigma_t == 0] = 0.0000000001
     sigma_t[sigma_t == 1] = 0.9999999999
     L =  y.T@np.log(sigma_t) + (1 - y).T@np.log(1 - sigma_t)

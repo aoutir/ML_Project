@@ -17,8 +17,10 @@ def sigmoid_reg_log(t):
 def calculate_penalized_loss(y, tx, w, lambda_):
     """compute the cost by negative log likelihood."""
     sigma_t = sigmoid_reg_log(tx@w)
+    # Avoid log RunTimeWarnings becasue of illegal values on sigma
     sigma_t[sigma_t == 0] = 0.00000001
     sigma_t[sigma_t == 1] = 0.99999999
+    sigma_t[sigma_t<0.00000001] = 0.00000001
     loss = y.T@np.log(sigma_t) + (1 - y).T@np.log(1 - sigma_t)
     L =  np.squeeze(-loss) + lambda_ * np.squeeze(w.T@w)
     return L
@@ -60,9 +62,9 @@ def reg_logisitic_regression(y, x, initial_w, max_iter, gamma):
     lambda_ = 0.00000001
     losses = []
 
-    # build tx
     # tx = np.c_[np.ones((y.shape[0], 1)), x]
     # tx = np.c_[x]
+    # build tx
     tx = x
     w = np.zeros((tx.shape[1], 1))
 

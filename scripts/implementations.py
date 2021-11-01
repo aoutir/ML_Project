@@ -89,7 +89,6 @@ def preprocessing(y, tX, ids):
     feature_median_0 = np.median(tX_0, axis = 0)
     feature_median_1 = np.median(tX_1, axis = 0)
     feature_median_23 = np.median(tX_23, axis = 0)
-    print(feature_median_0)
     # Replacing missing values (-999) values with the median
     for i in range(0,len(tX_0)):
         temp = tX_0[i,:]
@@ -99,10 +98,6 @@ def preprocessing(y, tX, ids):
         temp = tX_1[i,:]
         temp[temp == -999] = feature_median_1[temp == -999] #+ np.random.rand(1)*0.01
         tX_1[i,:] = temp
-    # standardizizing the data by removing the mean and the standard deviation
-    # tX_0 = standardize(tX_0)
-    # tX_1 = standardize(tX_1)
-    # tX_23 = standardize(tX_23)
     # returning the data
     return y_0, tX_0, ids_0, y_1, tX_1, ids_1, y_23, tX_23, ids_23
 

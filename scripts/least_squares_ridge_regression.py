@@ -5,6 +5,8 @@
 # get_ipython().run_line_magic('matplotlib', 'inline')
 import numpy as np
 import matplotlib.pyplot as plt
+import warnings
+warnings.filterwarnings("error")
 # get_ipython().run_line_magic('load_ext', 'autoreload')
 # get_ipython().run_line_magic('autoreload', '2')
 
@@ -20,14 +22,6 @@ def standardize(x):
     return x
 
 
-def build_poly(x, degree):
-    """polynomial basis functions for input data x, for j=0 up to j=degree."""
-    poly = np.ones((len(x) , 1))
-    for deg in range(1, degree+1):
-        poly = np.c_[poly, np.power(x, deg)]
-    return poly
-
-
 def compute_mse(e):
     """calculate the mean square error."""
     return (1/2)*np.mean(e**2)
@@ -35,6 +29,7 @@ def compute_mse(e):
 
 def least_squares(y, tx):
     """calculate the least squares solution."""
+
     # returns mse, and optimal weights
     a = tx.T.dot(tx)
     b = tx.T.dot(y)
@@ -49,7 +44,7 @@ def least_squares_demo(y , tx):
     # returns rmse, and weight
 
     #plt.plot(x_train ,y_train , "kx" )
-    # tx = standardize(tx)
+    tx = standardize(tx)
     # define parameters
     # define the structure of the figure
     num_row = 2
