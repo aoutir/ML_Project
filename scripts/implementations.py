@@ -13,215 +13,331 @@ DATA_TRAIN_PATH = PROJECT_PATH + '/data/train.csv'
 DATA_TEST_PATH = PROJECT_PATH + '/data/test.csv'
 
 
-def load_csv_data(data_path, sub_sample=False):
-    """Loads data and returns y (class labels), tX (features) and ids (event ids)"""
-    y = np.genfromtxt(data_path, delimiter=",", skip_header=1, dtype=str, usecols=1)
-    x = np.genfromtxt(data_path, delimiter=",", skip_header=1)
-    ids = x[:, 0].astype(np.int)
-    input_data = x[:, 2:]
 
-    # convert class labels from strings to binary (-1,1)
-    yb = np.ones(len(y))
-    yb[np.where(y=='b')] = -1
+""" LEAST SQUARES GRADIENT DESCENT CODE"""
 
-    # sub-sample
-    if sub_sample:
-        yb = yb[::50]
-        input_data = input_data[::50]
-        ids = ids[::50]
-
-    return yb, input_data, ids
-
-def standardize(x):
-    ''' Removing the mean and the standard deviation
+def optimize_hyperparamters_GD():
+    ''' Grid search to find the best hyperparameter gamma
     '''
-    x = x - np.mean(x, axis=0)
-    x /= np.std(x, axis=0)
-
-    return x
-
-def build_poly(x, degree):
-    """polynomial basis functions for input data x, for i=0 up to i=degree."""
-    temp = np.ones((len(x),1))
-    for i in range(1,degree+1):
-        new = np.power(x,i)
-        temp = np.c_[temp,new]
-    return temp
+    learning_rates = [0.001, 0.003, 0.001, 0.03, 0.1, 0.3]
+    print('Running Grid search for Least Squares GD')
+    minloss = float('inf')
+    for step in learning_rates:
+        loss, w= least_squares_GD(y, tX, np.zeros((tX.shape[1], 1)), max_iter, step)
+        if(loss < minloss):
+            optimalstep = step
+            minloss = loss
+    return optimalstep
 
 
-def preprocessing(y, tX, ids):
-    """ Splitting the Data based on the Jet Experiment number
-    Grouping into Exp 0, Exp 1 and Exp 2&3
-    input: data (label, features, ids)
-    output: data (label, features, ids) of each experiment in a numpy array
+def calculate_mse(e):
+    """Calculate the mse for vector e."""
+    return 1/2*np.mean(e**2)
+
+def compute_loss(y, tx, w):
+    """Calculate the loss.
+
+    You can calculate the loss using mse or mae.
     """
-    # initilizing the matrices
-    tX_0 = []
-    tX_1 = []
-    tX_23 = []
-    y_0 = []
-    y_1 = []
-    y_23 = []
-    ids_0 = []
-    ids_1 = []
-    ids_23 = []
-    # splitting the data based on the experiment
-    for i in range (0, len(tX)):
-        if tX[i,22] == 0:
-            tX_0.append(tX[i,:])
-            y_0.append(y[i])
-            ids_0.append(ids[i])
-        elif tX[i,22] == 1:
-            tX_1.append(tX[i,:])
-            y_1.append(y[i])
-            ids_1.append(ids[i])
-        else:
-            tX_23.append(tX[i,:])
-            y_23.append(y[i])
-            ids_23.append(ids[i])
-    # converting the data to numpy arrays
-    y_0, tX_0, ids_0, y_1, tX_1, ids_1, y_23, tX_23, ids_23 = np.asarray(y_0), np.asarray(tX_0), np.asarray(ids_0), np.asarray(y_1), np.asarray(tX_1), np.asarray(ids_1), np.asarray(y_23), np.asarray(tX_23), np.asarray(ids_23)
-    # removing unnecessary features
-    tX_0 = np.delete(tX_0, [4,5,6,12,22,23,24,25,26,27,28,29], 1)
-    tX_1 = np.delete(tX_1, [4,5,6,12,22,26,27,28], 1)
-    tX_23 = np.delete(tX_23, [22], 1)
-    # getting the median of every feature for each experiment
-    feature_median_0 = np.median(tX_0, axis = 0)
-    feature_median_1 = np.median(tX_1, axis = 0)
-    feature_median_23 = np.median(tX_23, axis = 0)
-    # Replacing missing values (-999) values with the median
-    for i in range(0,len(tX_0)):
-        temp = tX_0[i,:]
-        temp[temp == -999] = feature_median_0[temp == -999]
-        tX_0[i,:] = temp
-    for i in range(0,len(tX_1)):
-        temp = tX_1[i,:]
-        temp[temp == -999] = feature_median_1[temp == -999] #+ np.random.rand(1)*0.01
-        tX_1[i,:] = temp
-    # returning the data
-    return y_0, tX_0, ids_0, y_1, tX_1, ids_1, y_23, tX_23, ids_23
+    e = y - tx.dot(w)
+    return calculate_mse_LS_GD(e)
 
-def main():
-    # load the data
-    y, tX, ids = load_csv_data(DATA_TRAIN_PATH)
-    _, tX_test, ids_test = load_csv_data(DATA_TEST_PATH)
-    # setting hyper parameters
-    max_iter = 10000
-    gamma = 0.01
-    lambda_ridge_regression = 0.016
-    y_0, tX_0, ids_0, y_1, tX_1, ids_1, y_23, tX_23, ids_23 = preprocessing(y, tX, ids)
+def compute_gradient(y, tx, w):
+    """Compute the gradient."""
+    err = y - tx.dot(w)
+    grad = -tx.T.dot(err) / len(err)
 
-    augm = input("Do you want to do data augmenting? [1] Yes, [2] No ")
-    augm = int(augm)
-    if augm == 1:
-        deg = input("Pick Degree for polynomial expansion (Recommended: 3-5) ")
-        deg = int(deg)
-        degree = deg
-        tx_0_p = build_poly(tX_0, degree)
-        tx_1_p = build_poly(tX_1, degree)
-        tx_23_p = build_poly(tX_23, degree)
-        print('Data augmentation done')
-    else:
-        tx_0_p = tX_0
-        tx_1_p = tX_1
-        tx_23_p = tX_23
-        print('Data augmentation skipped')
-    # picking which algorithm to use to get the weights
-    methd = input("Which Method do you want to use: \n [1] Least Squares GD \n [2] Least Squares SGD \n [3] Least Squares \n [4] Ridge Regression \n [5] Logistic Regression \n [6] Regulated Logistic Regression ")
-    methd = int(methd)
-    if methd == 1:
-        print('Running Least Squares GD')
-        losses_0, w_0= gradient_descent_demo(y_0, tX_0, np.zeros((tX_0.shape[1], 1)), max_iter, gamma)
-        losses_1, w_1 = gradient_descent_demo(y_1, tX_1, np.zeros((tX_1.shape[1], 1)), max_iter, gamma)
-        losses_23, w_23 = gradient_descent_demo(y_23, tX_23, np.zeros((tX_23.shape[1], 1)), max_iter, gamma)
-    elif methd == 2:
-        print('Running Least Squares SGD')
-        losses_0, w_0 = stochastic_gradient_descent(y_0, tx_0_p, np.zeros((tx_0_p.shape[1], 1)), batch_size, max_iter, gamma)
-        losses_1, w_1 = stochastic_gradient_descent(y_1, tx_1_p, np.zeros((tx_1_p.shape[1], 1)), batch_size, max_iter, gamma)
-        losses_23, w_23 = stochastic_gradient_descent(y_23, tx_23_p, np.zeros((tx_23_p.shape[1], 1)), batch_size, max_iter, gamma)
-    elif methd == 3:
-        print('Running Least Squares')
-        w_0, losses_0 = least_squares_demo(y_0, tx_0_p)
-        w_1, losses_1 = least_squares_demo(y_1, tx_1_p)
-        w_23, losses_23 = least_squares_demo(y_23, tx_23_p)
-    elif methd == 4:
-        print('Running Ridge Regression')
-        w_0, losses_0 = ridge_regression_demo( y_0, tx_0_p , 0.016)
-        w_1, losses_1 = ridge_regression_demo( y_1, tx_1_p , 0.016)
-        w_23, losses_23 = ridge_regression_demo( y_23, tx_23_p, 0.016)
-    elif methd == 5:
-        print('Running Logistic Regression')
-        y_0[y_0==-1] = 0
-        y_1[y_1==-1] = 0
-        y_23[y_23==-1] = 0
-        w_0, losses_0 = logistic_regression_newton_method_demo(y_0, tx_0_p, np.zeros((tx_0_p.shape[1], 1)), max_iter, gamma)
-        w_1, losses_1 = logistic_regression_newton_method_demo(y_1, tx_1_p, np.zeros((tx_1_p.shape[1], 1)), max_iter, gamma)
-        w_23, losses_23 = logistic_regression_newton_method_demo(y_23, tx_23_p, np.zeros((tx_23_p.shape[1], 1)), max_iter, gamma)
-    elif methd == 6:
-        print('Running Regularized Logistic Regression')
-        y_0[y_0==-1] = 0
-        y_1[y_1==-1] = 0
-        y_23[y_23==-1] = 0
-        w_0, losses_0 = reg_logisitic_regression(y_0, tx_0_p, np.zeros((tx_0_p.shape[1], 1)), max_iter, gamma)
-        w_1, losses_1 = reg_logisitic_regression(y_1, tx_1_p, np.zeros((tx_1_p.shape[1], 1)), max_iter, gamma)
-        w_23, losses_23 = reg_logisitic_regression(y_23, tx_23_p, np.zeros((tx_23_p.shape[1], 1)), max_iter, gamma)
-    else:
-        print('Picked Something outside 1 and 6. Will do Gradient Descent')
-        losses_0, w_0= gradient_descent_demo(y_0, tX_0, np.zeros((tX_0.shape[1], 1)), max_iter, gamma)
-        losses_1, w_1 = gradient_descent_demo(y_1, tX_1, np.zeros((tX_1.shape[1], 1)), max_iter, gamma)
-        losses_23, w_23 = gradient_descent_demo(y_23, tX_23, np.zeros((tX_23.shape[1], 1)), max_iter, gamma)
-    # deciding whether to use polynomial expansion of the data
-    if augm == 1:
-        y_pred = np.zeros((len(tX_test),1))
-        tX_test = build_poly(tX_test, degree)
-        # Get the results for the testg data with the different weights based on the experiment number
-        delete_0 = np.array([4,5,6,12,22,23,24,25,26,27,28,29])
-        delete_1 = np.array([4,5,6,12,22,26,27,28])
-        delete_23 = np.array([22])
-        delete_0_i = delete_0
-        delete_1_i = delete_1
-        delete_2_i = delete_23
-        if degree >1:
-            # Remove columns of the augmented data
-            for i in range(1,degree):
-                delete_0_i = np.concatenate((delete_0_i, delete_0+(30*i)), axis=None)
-                delete_1_i = np.concatenate((delete_1_i, delete_1+(30*i)), axis=None)
-                delete_2_i = np.concatenate((delete_2_i, delete_23+(30*i)), axis=None)
-        # If a bias term is to be added, uncomment the line below
-        # Note: An example on how to add a bias term is commented in the logisitic regression function
-        # tX_test = np.concatenate((np.ones((tX_test.shape[0], 1)), tX_test), axis=1)
-        for i in range(0,len(tX_test)):
-            if tX_test[i,23] == 0:
-                tmp = np.delete(tX_test[i,:], delete_0_i)
-                y_pred[i] = np.dot(tmp, w_0)
-            if tX_test[i,23] == 1:
-                tmp = np.delete(tX_test[i,:], delete_1_i)
-                y_pred[i] = np.dot(tmp, w_1)
-            else:
-                tmp = np.delete(tX_test[i,:], delete_2_i)
-                y_pred[i] = np.dot(tmp, w_23)
-        y_pred[np.where(y_pred <= 0)] = -1
-        y_pred[np.where(y_pred > 0)] = 1
-        create_csv_submission(ids_test, y_pred, 'Results_with_Augmentation.csv')
-    else:
-        y_pred = np.zeros((len(tX_test),1))
-        # print(tX_test.shape)
-        # tX_test = np.concatenate((np.ones((tX_test.shape[0], 1)), tX_test), axis=1)
-        # print(tX_test.shape)
-        # Get the results for the testg data with the different weights based on the experiment number
-        for i in range(0,len(tX_test)):
-            if tX_test[i,22] == 0:
-                tmp = np.delete(tX_test[i,:], [4,5,6,12,22,23,24,25,26,27,28,29])
-                y_pred[i] = np.dot(tmp, w_0)
-            if tX_test[i,22] == 1:
-                tmp = np.delete(tX_test[i,:], [4,5,6,12,22,26,27,28])
-                y_pred[i] = np.dot(tmp, w_1)
-            else:
-                tmp = np.delete(tX_test[i,:], [22])
-                y_pred[i] = np.dot(tmp, w_23)
-        y_pred[np.where(y_pred <= 0)] = -1
-        y_pred[np.where(y_pred > 0)] = 1
-        create_csv_submission(ids_test, y_pred, 'Results_No_Augmentation.csv')
+    return grad, err
 
-if __name__ == "__main__":
-    main()
+
+def gradient_descent(y, tx, initial_w, max_iters, gamma):
+    """Gradient descent algorithm."""
+    ws = [initial_w]
+    losses = []
+    w = initial_w
+    y = np.reshape(y, (-1, 1))
+    for n_iter in range(max_iters):
+        grad, err = compute_gradient(y, tx, w)
+        loss = compute_loss(y, tx, w)
+        w = w - gamma * grad
+        ws.append(w)
+        losses.append(loss)
+    return loss, w
+
+
+
+""" LEAST SQUARES STOCHASTIC GRADIENT DESCENT CODE"""
+
+
+def optimize_hyperparamters_SGD():
+    ''' Grid search to find the best hyperparameter gamma for SGD
+    '''
+    learning_rates = [0.001, 0.003, 0.001, 0.03, 0.1, 0.3]
+    print('Running Grid search for Least Squares SGD')
+    minloss = float('inf')
+    for step in learning_rates:
+        loss, w= least_squares_SGD(y, tX, np.zeros((tX.shape[1], 1)), max_iter, step)
+        if(loss < minloss):
+            optimalstep = step
+            minloss = loss
+    return optimalstep
+
+def batch_iter(y, tx, batch_size, num_batches=1, shuffle=True):
+    """
+    Generate a minibatch iterator for a dataset.
+    Takes as input two iterables (here the output desired values 'y' and the input data 'tx')
+    Outputs an iterator which gives mini-batches of `batch_size` matching elements from `y` and `tx`.
+    Data can be randomly shuffled to avoid ordering in the original data messing with the randomness of the minibatches.
+    Example of use :
+    for minibatch_y, minibatch_tx in batch_iter(y, tx, 32):
+        <DO-SOMETHING>
+    """
+    data_size = len(y)
+
+    if shuffle:
+        shuffle_indices = np.random.permutation(np.arange(data_size))
+        shuffled_y = y[shuffle_indices]
+        shuffled_tx = tx[shuffle_indices]
+    else:
+        shuffled_y = y
+        shuffled_tx = tx
+    for batch_num in range(num_batches):
+        start_index = batch_num * batch_size
+        end_index = min((batch_num + 1) * batch_size, data_size)
+        if start_index != end_index:
+            yield shuffled_y[start_index:end_index], shuffled_tx[start_index:end_index]
+
+def stochastic_gradient_descent(y, tx, initial_w, batch_size, max_iters, gamma):
+    """Stochastic gradient descent."""
+    # Define parameters to store w and loss
+    ws = [initial_w]
+    losses = []
+    w = initial_w
+
+    for n_iter in range(max_iters):
+        for y_batch, tx_batch in batch_iter(y, tx, batch_size=batch_size, num_batches=1):
+
+            grad, _ = compute_gradient(y_batch, tx_batch, w)
+            w = w - gamma * grad
+            loss = compute_loss(y, tx, w)
+            # store w and loss
+            ws.append(w)
+            losses.append(loss)
+    return loss, w
+
+
+""" RIDGE REGRESSION CODE"""
+
+
+def ridge_regression(y, tx, lambda_):
+    """implementation of ridge regression method for a given lambda value."""
+    lambda_p = 2*tx.shape[0]*lambda_
+    eye = np.identity(tx.shape[1])
+    a = tx.T.dot(tx) + lambda_p*eye
+    b = tx.T.dot(y)
+    ridge_weights = np.linalg.solve(a,b)
+    return ridge_weights
+
+
+def ridge_regression_demo( y , tx , lambda_):
+    """ridge regression demo.
+    standadizes the data , computes the weight using ridge regression and
+    returns the weight and the loss RMSE"""
+    weight = ridge_regression(y, tx, lambda_)
+    rmse_tr = np.sqrt(2 * compute_mse(y-tx.dot(weight)))
+    print("  lambda={l:.3f}, Training RMSE={tr:.3f}".format(
+           l=lambda_, tr=rmse_tr ))
+    return weight , rmse_tr
+
+
+
+""" LEAST SQUARES CODE"""
+
+
+def least_squares(y, tx):
+    """calculate the least squares solution."""
+
+    # returns mse, and optimal weights
+    a = tx.T.dot(tx)
+    b = tx.T.dot(y)
+    opt_weights_w = np.linalg.solve(a,b)
+    mse = 1/2*np.mean((y-tx.dot(opt_weights_w))**2)
+    return mse , opt_weights_w
+
+
+def least_squares_demo(y , tx):
+    """Constructing the polynomial basis function expansion of the data,
+       and then running least squares regression."""
+    # returns rmse, and weight
+
+    tx = standardize(tx)
+    # define parameters
+    # define the structure of the figure
+    num_row = 2
+    num_col = 2
+    f, axs = plt.subplots(num_row, num_col)
+    # calculate weight through least square
+    mse_tr , w = least_squares(y, tx)
+    # calculate RMSE for train data,
+    # and store them in rmse_tr
+    rmse_tr = np.sqrt(2 * compute_mse(y-tx.dot(w)))
+    print("Training RMSE={tr:.3f}".format(tr=rmse_tr))
+    return w , mse_tr
+
+
+""" LOGISITIC REGRESSION CODE"""
+
+
+def sigmoid(t):
+    """apply the sigmoid function on t."""
+    sigma_t = (1+np.exp(-t))**(-1)
+    t[t>500] = 500
+    t[t<-500] = -500
+    sigma_t = 1.0/(1+np.exp(-t))
+    return sigma_t
+
+
+def calculate_loss_log_reg(y, tx, w):
+    """compute the loss: negative log likelihood."""
+    sigma_t = sigmoid(tx@w)
+    N = y.shape[0]
+    # Avoid log RunTimeWarnings becasue of illegal values, and put limits on the log function
+    sigma_t[sigma_t == 0] = 0.0000000001
+    sigma_t[sigma_t == 1] = 0.9999999999
+    L =  y.T@np.log(sigma_t) + (1 - y).T@np.log(1 - sigma_t)
+    L = np.squeeze(-L)
+    return L
+
+def calculate_gradient_log_reg(y, tx, w):
+    """compute the gradient of loss."""
+    sigma_t = sigmoid(tx@w)
+    y = np.reshape(y, (-1, 1))
+    G = tx.T@(sigma_t - y)
+    return G
+
+def calculate_hessian_log_reg(y, tx, w):
+    """return the Hessian of the loss function."""
+
+    # calculate Hessian:
+    predictions = sigmoid(tx@w)
+    H = tx.T@(predictions*(1-predictions)*tx)
+    return H
+
+def logistic_regression(y, tx, w):
+    """return the loss, gradient, and Hessian."""
+
+    L = calculate_loss_log_reg(y, tx, w)
+    G = calculate_gradient_log_reg(y, tx, w)
+    H = calculate_hessian_log_reg(y, tx, w)
+    # return loss, gradient, and Hessian
+    return L, G, H
+
+
+def learning_by_newton_method(y, tx, w, gamma):
+    """
+    Do one step on Newton's method.
+    return the loss and updated w.
+    """
+    # return loss, gradient and Hessian
+    L, G, H = logistic_regression(y, tx, w)
+    w = w - gamma*np.linalg.solve(H,G)
+
+    return L, w
+
+def logistic_regression_newton_method_demo(y, x, initial_w, max_iter, gamma):
+    # init parameters
+
+    threshold = 1e-3
+    losses = []
+
+    # To add a bias term, uncomment the 3 lines below, and comment the two following lines
+    # tx = np.c_[np.ones((y.shape[0], 1)), x]
+    # w = np.zeros((tx.shape[1], 1))
+    # initial_w = w
+    # build tx
+    tx = np.c_[x]
+    w = initial_w
+    # start the logistic regression
+    for iter in range(max_iter):
+        # get loss and update w.
+        loss, w = learning_by_newton_method(y, tx, w, gamma)
+        # log info
+        if iter % 10 == 0:
+            print("Current iteration={i}, the loss={l}".format(i=iter, l=loss))
+        # converge criterion
+        losses.append(loss)
+        if len(losses) > 1 and np.abs(losses[-1] - losses[-2]) < threshold:
+            break
+    return w, losses
+
+
+"""REGULARIZED LOGISITIC REGRESSION"""
+
+def calculate_penalized_loss(y, tx, w, lambda_):
+    """compute the cost by negative log likelihood."""
+    sigma_t = sigmoid_reg_log(tx@w)
+    # Avoid log RunTimeWarnings becasue of illegal values on sigma
+    sigma_t[sigma_t == 0] = 0.00000001
+    sigma_t[sigma_t == 1] = 0.99999999
+    sigma_t[sigma_t<0.00000001] = 0.00000001
+    loss = y.T@np.log(sigma_t) + (1 - y).T@np.log(1 - sigma_t)
+    L =  np.squeeze(-loss) + lambda_ * np.squeeze(w.T@w)
+    return L
+
+
+def calculate_penalized_gradient(y, tx, w, lambda_):
+    """compute the gradient of loss."""
+    sigma_t = sigmoid_reg_log(tx@w)
+    y = np.reshape(y, (-1, 1))
+    G = tx.T@(sigma_t - y) + 2*lambda_*w
+    return G
+
+def penalized_logistic_regression(y, tx, w, lambda_):
+    """return the loss, gradient"""
+
+    L = calculate_penalized_loss(y, tx, w, lambda_)
+    G = calculate_penalized_gradient(y, tx, w, lambda_)
+    # return loss, gradient
+    return L, G
+
+def learning_by_penalized_gradient(y, tx, w, gamma, lambda_):
+    """
+    Do one step of gradient descent, using the penalized logistic regression.
+    Return the loss and updated w.
+    """
+
+    # return loss, gradient
+    L, G = penalized_logistic_regression(y, tx, w, lambda_)
+
+    # update w
+    w = w - gamma*G
+    return L, w
+
+
+def reg_logisitic_regression(y, x, initial_w, max_iter, gamma):
+    # init parameters
+    threshold = 1e-2
+    gamma = 0.0001
+    lambda_ = 0.00000001
+    losses = []
+
+    # To add a bias term, uncomment the 3 lines below, and comment the two following lines
+    # tx = np.c_[np.ones((y.shape[0], 1)), x]
+    # w = np.zeros((tx.shape[1], 1))
+    # initial_w = w
+    # build tx
+    tx = x
+    w = np.zeros((tx.shape[1], 1))
+
+    # start the logistic regression
+    for iter in range(max_iter):
+        # get loss and update w.
+        loss, w = learning_by_penalized_gradient(y, tx, w, gamma, lambda_)
+        # log info
+        if iter % 100 == 0:
+            print("Current iteration={i}, loss={l}".format(i=iter, l=loss))
+        # converge criterion
+        losses.append(loss)
+        if len(losses) > 1 and np.abs(losses[-1] - losses[-2]) < threshold:
+            break
+    return w, losses[-1]

@@ -60,4 +60,4 @@ def gradient_descent_demo(y, tx, initial_w, max_iters, gamma):
 
             we += "]"
             print(we)
-    return losses, w
+    return loss, w

@@ -11,6 +11,8 @@ The methods are:
 
 Each of these methods is implemented in a different python file. Our best results is obtained by running: run.py
 
-Furthermore, the script implementations.py is a script done for the user to test any model, and decide which model to pick, with/without polynomial augmentation and with the degree of the augmentation.
+Furthermore, the script demo.py is a script done for the user to test any model, and decide which model to pick, with/without polynomial augmentation and with the degree of the augmentation.
 
 The data for training and testing should be put in the "data" folder, and the results are saved in the script folder.
+
+All the functions are stacked in implementation.py, but are used from their respective python files in the demo.
