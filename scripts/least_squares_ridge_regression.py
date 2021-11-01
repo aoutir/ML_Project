@@ -49,7 +49,7 @@ def least_squares_demo(y , tx):
     # returns rmse, and weight
 
     #plt.plot(x_train ,y_train , "kx" )
-    tx = standardize(tx)
+    # tx = standardize(tx)
     # define parameters
     # define the structure of the figure
     num_row = 2

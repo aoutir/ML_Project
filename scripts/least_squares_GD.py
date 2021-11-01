@@ -27,13 +27,20 @@ def compute_gradient(y, tx, w):
 
     return grad, err
 
+def standardize(x):
+    """standardize the data with mean and standard deviation"""
+    x = x - np.mean(x, axis=0)
+    x /= np.std(x, axis=0)
+    return x
+
+
 
 def gradient_descent_demo(y, tx, initial_w, max_iters, gamma):
     """Gradient descent algorithm."""
     ws = [initial_w]
     losses = []
     w = initial_w
-    # tx = standardize(tx)
+    tx = standardize(tx)
     y = np.reshape(y, (-1, 1))
     gamma = 0.0001
     for n_iter in range(max_iters):

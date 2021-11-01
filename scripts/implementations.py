@@ -89,6 +89,7 @@ def preprocessing(y, tX, ids):
     feature_median_0 = np.median(tX_0, axis = 0)
     feature_median_1 = np.median(tX_1, axis = 0)
     feature_median_23 = np.median(tX_23, axis = 0)
+    print(feature_median_0)
     # Replacing missing values (-999) values with the median
     for i in range(0,len(tX_0)):
         temp = tX_0[i,:]
@@ -131,28 +132,28 @@ def main():
         tx_23_p = tX_23
         print('Data augmentation skipped')
     # picking which algorithm to use to get the weights
-    methd = input("Which Method do you want to use: \n [1] Least Squares GD \n [2] Least Squares SGD \n [3] Least Squares \n [4] Ridge Regression \n [5] Logistic Regression \n [6] Regulated Logistic Regression \n ")
+    methd = input("Which Method do you want to use: \n [1] Least Squares GD \n [2] Least Squares SGD \n [3] Least Squares \n [4] Ridge Regression \n [5] Logistic Regression \n [6] Regulated Logistic Regression ")
     methd = int(methd)
     if methd == 1:
         print('Running Least Squares GD')
         losses_0, w_0= gradient_descent_demo(y_0, tX_0, np.zeros((tX_0.shape[1], 1)), max_iter, gamma)
         losses_1, w_1 = gradient_descent_demo(y_1, tX_1, np.zeros((tX_1.shape[1], 1)), max_iter, gamma)
         losses_23, w_23 = gradient_descent_demo(y_23, tX_23, np.zeros((tX_23.shape[1], 1)), max_iter, gamma)
-    if methd == 2:
+    elif methd == 2:
         print('Running Least Squares SGD')
         losses_0, w_0 = stochastic_gradient_descent(y_0, tx_0_p, np.zeros((tx_0_p.shape[1], 1)), batch_size, max_iter, gamma)
         losses_1, w_1 = stochastic_gradient_descent(y_1, tx_1_p, np.zeros((tx_1_p.shape[1], 1)), batch_size, max_iter, gamma)
         losses_23, w_23 = stochastic_gradient_descent(y_23, tx_23_p, np.zeros((tx_23_p.shape[1], 1)), batch_size, max_iter, gamma)
-    if methd == 3:
+    elif methd == 3:
         print('Running Least Squares')
         w_0, losses_0 = least_squares_demo(y_0, tx_0_p)
         w_1, losses_1 = least_squares_demo(y_1, tx_1_p)
         w_23, losses_23 = least_squares_demo(y_23, tx_23_p)
-    if methd == 4:
+    elif methd == 4:
         print('Running Ridge Regression')
-        w_0, losses_0 = ridge_regression_demo( y_0, tx_0_p , lambda_)
-        w_1, losses_1 = ridge_regression_demo( y_1, tx_1_p , lambda_)
-        w_23, losses_23 = ridge_regression_demo( y_23, tx_23_p, lambda_)
+        w_0, losses_0 = ridge_regression_demo( y_0, tx_0_p , 0.016)
+        w_1, losses_1 = ridge_regression_demo( y_1, tx_1_p , 0.016)
+        w_23, losses_23 = ridge_regression_demo( y_23, tx_23_p, 0.016)
     elif methd == 5:
         print('Running Logistic Regression')
         y_0[y_0==-1] = 0
